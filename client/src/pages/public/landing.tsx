@@ -382,8 +382,8 @@ export function LandingPage() {
             <MediaImage
               src="/images/alumni-gathering.jpg"
               alt="Sukkur IBA alumni gathered together on campus"
-              className="aspect-[599/319] rounded-2xl shadow-card mb-10"
-              imgClassName="object-cover object-top"
+              className="aspect-[16/9] rounded-2xl shadow-card mb-10"
+              imgClassName="object-cover object-center"
             />
           </motion.div>
 
