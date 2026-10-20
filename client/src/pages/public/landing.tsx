@@ -1,4 +1,5 @@
 import { Constellation3D } from '@/components/3d/Constellation'
+import { MediaImage } from '@/components/ui/media-image'
 import { MotionConfig, motion, type Variants } from 'framer-motion'
 import type { ReactNode } from 'react'
 
@@ -132,7 +133,7 @@ const features = [
     icon: icons.jobs,
   },
   {
-    id: 'events',
+    id: 'university-events',
     title: 'University Events',
     description: 'Stay connected with campus events, reunions, and workshops.',
     icon: icons.events,
@@ -195,8 +196,26 @@ export function LandingPage() {
 
         {/* Hero Section */}
 
-        <section className="pt-20 pb-16 md:pt-32 lg:pt-48 relative">
-          <div className="page-container">
+        <section className="relative overflow-hidden pt-20 pb-16 md:pt-32 lg:pt-48">
+          {/* Campus aerial as the hero backdrop, heavily scrimmed so the copy
+              stays fully legible at every viewport. */}
+          <MediaImage
+            src="/images/campus.jpg"
+            alt="Aerial view of the Sukkur IBA University campus"
+            eager
+            className="absolute inset-0 h-full w-full rounded-none"
+            imgClassName="object-cover object-center"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-gradient-to-r from-background via-background/94 to-background/55"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent"
+          />
+
+          <div className="page-container relative">
             <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
               {/* Hero Content */}
               <motion.div initial="hidden" animate="visible" variants={stagger}>
@@ -308,6 +327,48 @@ export function LandingPage() {
           </div>
         </Section>
 
+        {/* Events Section */}
+
+        <section id="events" className="py-20 bg-background">
+          <div className="page-container">
+            <motion.div
+              className="grid items-center gap-10 lg:grid-cols-2"
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.25 }}
+            >
+              <MediaImage
+                src="/images/seminar.jpg"
+                alt="Alumni and students attending a seminar at Sukkur IBA"
+                className="aspect-[599/316] rounded-2xl shadow-card lg:order-2"
+                imgClassName="object-cover object-center"
+              />
+
+              <motion.div variants={item} className="lg:order-1">
+                <p className="text-primary text-sm font-semibold uppercase tracking-wider mb-3">
+                  Events
+                </p>
+                <h2 className="text-3xl sm:text-4xl font-bold leading-tight tracking-tight mb-3">
+                  Reunions, seminars and campus meetups
+                </h2>
+                <p className="text-secondary leading-relaxed mb-6">
+                  Alumni chapters host guest sessions, career workshops and on-campus
+                  reunions throughout the year. Browse the events hub to RSVP, add a
+                  date to your calendar, and see who else from your cohort is attending.
+                </p>
+                <a
+                  href="/events"
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-3 font-medium text-white transition-colors hover:bg-primary/90"
+                >
+                  Browse events
+                  <span aria-hidden="true">→</span>
+                </a>
+              </motion.div>
+            </motion.div>
+          </div>
+        </section>
+
         {/* Success Stories Section */}
 
         <Section
@@ -317,6 +378,15 @@ export function LandingPage() {
           title="Alumni Impact"
           lead="Verified alumni achievements from across the Sukkur IBA community"
         >
+          <motion.div variants={item}>
+            <MediaImage
+              src="/images/alumni-gathering.jpg"
+              alt="Sukkur IBA alumni gathered together on campus"
+              className="aspect-[599/319] rounded-2xl shadow-card mb-10"
+              imgClassName="object-cover object-top"
+            />
+          </motion.div>
+
           <div className="grid md:grid-cols-3 gap-6">
             {stories.map((story) => (
               <motion.figure
