@@ -1,6 +1,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
+@import "@fontsource-variable/manrope";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,6 +9,9 @@
 @layer base {
   :root {
     color-scheme: light;
+    /* Manrope is the primary typeface; Inter and system fonts are fallbacks. */
+    --font-sans: 'Manrope Variable', 'Manrope', 'Inter Variable', 'Inter', system-ui, sans-serif;
+    --font-heading: var(--font-sans);
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
@@ -69,7 +73,7 @@
   }
   .theme {
     --font-heading: var(--font-sans);
-    --font-sans: 'Inter Variable', sans-serif;
+    --font-sans: 'Manrope Variable', 'Manrope', 'Inter Variable', 'Inter', system-ui, sans-serif;
   }
   .dark {
     --background: oklch(0.145 0 0);

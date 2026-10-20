@@ -18,8 +18,10 @@ export const color = {
 
 export const typography = {
   fontFamily: {
-    base: 'Inter, system-ui, -apple-system, sans-serif',
-    heading: 'Inter, system-ui, -apple-system, sans-serif',
+    // Manrope is the primary typeface; system + Inter fonts are the fallback.
+    base: '"Manrope Variable", Manrope, "Inter Variable", Inter, system-ui, -apple-system, sans-serif',
+    heading:
+      '"Manrope Variable", Manrope, "Inter Variable", Inter, system-ui, -apple-system, sans-serif',
   },
   fontSize: {
     xs: '0.75rem',

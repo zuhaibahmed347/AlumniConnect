@@ -24,8 +24,13 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
+        /* Only large, leaf-level libraries get a named chunk. React itself is
+           deliberately NOT listed: forcing react/react-dom into a separate
+           manual chunk can put them after their consumers in the module graph,
+           which surfaces as "Cannot read properties of undefined" from
+           reconciler/event code. Let Rollup order those naturally. */
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
+          three: ['three', '@react-three/fiber'],
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
           charts: ['recharts'],
           forms: ['react-hook-form', '@hookform/resolvers', 'zod'],

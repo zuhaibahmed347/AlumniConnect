@@ -42,8 +42,27 @@ export default {
         ring: '#4338CA',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
-        heading: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        // Manrope is the primary typeface; Inter + system fonts are the fallback stack.
+        sans: [
+          'Manrope Variable',
+          'Manrope',
+          'Inter Variable',
+          'Inter',
+          'system-ui',
+          '-apple-system',
+          'Segoe UI',
+          'sans-serif',
+        ],
+        heading: [
+          'Manrope Variable',
+          'Manrope',
+          'Inter Variable',
+          'Inter',
+          'system-ui',
+          '-apple-system',
+          'Segoe UI',
+          'sans-serif',
+        ],
       },
       boxShadow: {
         card: '0 1px 3px 0 rgb(16 21 47 / 0.06), 0 1px 2px -1px rgb(16 21 47 / 0.08)',
@@ -56,6 +75,11 @@ export default {
         sticky: '1020',
         modal: '1030',
         tooltip: '1040',
+      },
+      // Shared easing so CSS transitions match the Motion for React curves
+      // used across the app (lib/motion.ts).
+      transitionTimingFunction: {
+        'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
       },
       keyframes: {
         'fade-in': {
@@ -74,12 +98,19 @@ export default {
           from: { opacity: '1' },
           to: { opacity: '0' },
         },
+        'constellation-drift': {
+          '0%': { transform: 'translateY(0px) rotate(0deg)' },
+          '50%': { transform: 'translateY(-6px) rotate(1.2deg)' },
+          '100%': { transform: 'translateY(0px) rotate(0deg)' },
+        },
       },
       animation: {
-        'fade-in': 'fade-in 0.25s ease-out',
+        'fade-in': 'fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'caret-blink': 'caret-blink 1s step-end infinite',
+        // Gentle idle float for the CSS constellation fallback.
+        'constellation-drift': 'constellation-drift 14s ease-in-out infinite',
       },
     },
   },
