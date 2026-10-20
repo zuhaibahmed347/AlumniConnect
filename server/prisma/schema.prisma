@@ -1,0 +1,467 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  EVENT_MANAGER
+  MODERATOR
+  MENTORSHIP_MANAGER
+  MEMBER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_VERIFICATION
+  SUSPENDED
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum RegistrationStatus {
+  REGISTERED
+  CANCELLED
+  WAITLISTED
+  ATTENDED
+}
+
+enum JobStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  FILLED
+  ARCHIVED
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  FREELANCE
+  REMOTE
+}
+
+enum MentorshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum NotificationType {
+  MENTORSHIP_REQUEST
+  MENTORSHIP_RESPONSE
+  EVENT_REGISTRATION
+  EVENT_UPDATE
+  EVENT_REMINDER
+  JOB_APPLICATION
+  NEW_MESSAGE
+  ANNOUNCEMENT
+  SYSTEM
+}
+
+enum AnnouncementPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+}
+
+model User {
+  id             String         @id @default(cuid())
+  email          String         @unique
+  passwordHash   String
+  name           String
+  avatarUrl      String?
+  role           UserRole       @default(MEMBER)
+  status         UserStatus     @default(PENDING_VERIFICATION)
+  emailVerified  Boolean        @default(false)
+  emailVerifyToken String?      @unique
+  passwordResetToken String?    @unique
+  passwordResetExpires DateTime?
+  lastLoginAt    DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  profile        Profile?
+  organizedEvents Event[]       @relation("EventOrganizer")
+  eventRegistrations EventRegistration[]
+  postedJobs     Job[]          @relation("JobPoster")
+  mentorshipProfile MentorshipProfile?
+  createdConversations Conversation[]
+  conversations  ConversationParticipant[]
+  sentMessages   Message[]      @relation("MessageSender")
+  notifications  Notification[]
+  authoredAnnouncements Announcement[] @relation("AnnouncementAuthor")
+  auditLogs      AuditLog[]
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+model Profile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  headline      String?
+  bio           String?  @db.Text
+  location      String?
+  website       String?
+  linkedinUrl   String?
+  twitterUrl    String?
+  githubUrl     String?
+  graduationYear Int?
+  degree        String?
+  major         String?
+  isPublic      Boolean  @default(true)
+  showEmail     Boolean  @default(false)
+  showPhone     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  educations    Education[]
+  experiences   Experience[]
+  profileSkills ProfileSkill[]
+
+  @@index([graduationYear])
+  @@index([location])
+  @@map("profiles")
+}
+
+model Education {
+  id            String   @id @default(cuid())
+  profileId     String
+  institution   String
+  degree        String
+  fieldOfStudy  String?
+  startYear     Int
+  endYear       Int?
+  description   String?  @db.Text
+  isCurrent     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  profile       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@map("educations")
+}
+
+model Experience {
+  id              String         @id @default(cuid())
+  profileId       String
+  company         String
+  title           String
+  location        String?
+  employmentType  EmploymentType
+  startDate       DateTime
+  endDate         DateTime?
+  isCurrent       Boolean        @default(false)
+  description     String?        @db.Text
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  profile         Profile        @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@map("experiences")
+}
+
+model Skill {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  category    String?
+  createdAt   DateTime @default(now())
+
+  profiles    ProfileSkill[]
+
+  @@index([name])
+  @@index([category])
+  @@map("skills")
+}
+
+model ProfileSkill {
+  profileId    String
+  skillId      String
+  proficiency  Int      @default(1)
+  createdAt    DateTime @default(now())
+
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  skill        Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([profileId, skillId])
+  @@map("profile_skills")
+}
+
+model Event {
+  id              String       @id @default(cuid())
+  title           String
+  slug            String       @unique
+  description     String       @db.Text
+  shortDescription String?     @db.Text
+  coverImageUrl   String?
+  startDate       DateTime
+  endDate         DateTime
+  timezone        String       @default("UTC")
+  location        String?
+  isVirtual       Boolean      @default(false)
+  virtualUrl      String?
+  capacity        Int?
+  status          EventStatus  @default(DRAFT)
+  organizerId     String
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  organizer       User         @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Restrict)
+  registrations   EventRegistration[]
+
+  @@index([organizerId])
+  @@index([status])
+  @@index([startDate])
+  @@index([slug])
+  @@map("events")
+}
+
+model EventRegistration {
+  id           String             @id @default(cuid())
+  eventId      String
+  userId       String
+  status       RegistrationStatus @default(REGISTERED)
+  registeredAt DateTime           @default(now())
+  attendedAt   DateTime?
+  cancelledAt  DateTime?
+
+  event        Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+  @@index([status])
+  @@map("event_registrations")
+}
+
+model Job {
+  id               String          @id @default(cuid())
+  title            String
+  slug             String          @unique
+  company          String
+  companyLogoUrl   String?
+  companyWebsite   String?
+  description      String          @db.Text
+  requirements     String?         @db.Text
+  benefits         String?         @db.Text
+  location         String?
+  isRemote         Boolean         @default(false)
+  employmentType   EmploymentType
+  salaryMin        Int?
+  salaryMax        Int?
+  salaryCurrency   String          @default("USD")
+  status           JobStatus       @default(DRAFT)
+  postedById       String
+  expiresAt        DateTime?
+  externalApplyUrl String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  postedBy         User            @relation("JobPoster", fields: [postedById], references: [id], onDelete: Restrict)
+
+  @@index([postedById])
+  @@index([status])
+  @@index([employmentType])
+  @@index([isRemote])
+  @@index([slug])
+  @@index([expiresAt])
+  @@map("jobs")
+}
+
+model MentorshipProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  headline         String
+  bio              String   @db.Text
+  expertise        String[]
+  industries       String[]
+  maxMentees       Int      @default(3)
+  currentMentees   Int      @default(0)
+  isAvailable      Boolean  @default(true)
+  meetingFrequency String?
+  preferredFormat  String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sentRequests     MentorshipRequest[] @relation("Mentor")
+  receivedRequests MentorshipRequest[] @relation("Mentee")
+
+  @@index([userId])
+  @@index([isAvailable])
+  @@map("mentorship_profiles")
+}
+
+model MentorshipRequest {
+  id                 String            @id @default(cuid())
+  mentorId           String
+  menteeId           String
+  message            String            @db.Text
+  status             MentorshipStatus  @default(PENDING)
+  requestedAt        DateTime          @default(now())
+  respondedAt        DateTime?
+  startedAt          DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+
+  mentor             MentorshipProfile @relation("Mentor", fields: [mentorId], references: [id], onDelete: Cascade)
+  mentee             MentorshipProfile @relation("Mentee", fields: [menteeId], references: [id], onDelete: Cascade)
+
+  @@index([mentorId])
+  @@index([menteeId])
+  @@index([status])
+  @@map("mentorship_requests")
+}
+
+model Conversation {
+  id          String            @id @default(cuid())
+  type        ConversationType  @default(DIRECT)
+  name        String?
+  avatarUrl   String?
+  createdById String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  createdBy   User              @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  participants ConversationParticipant[]
+  messages    Message[]
+
+  @@index([createdById])
+  @@index([type])
+  @@map("conversations")
+}
+
+model ConversationParticipant {
+  id             String   @id @default(cuid())
+  conversationId String
+  userId         String
+  joinedAt       DateTime @default(now())
+  leftAt         DateTime?
+  isAdmin        Boolean  @default(false)
+  lastReadAt     DateTime?
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+  @@map("conversation_participants")
+}
+
+model Message {
+  id              String      @id @default(cuid())
+  conversationId  String
+  senderId        String
+  content         String      @db.Text
+  messageType     MessageType @default(TEXT)
+  metadata        Json?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  deletedAt       DateTime?
+
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender          User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model Notification {
+  id        String            @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String            @db.Text
+  data      Json?
+  isRead    Boolean           @default(false)
+  readAt    DateTime?
+  createdAt DateTime          @default(now())
+
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model Announcement {
+  id           String               @id @default(cuid())
+  title        String
+  content      String               @db.Text
+  priority     AnnouncementPriority @default(NORMAL)
+  authorId     String
+  publishedAt  DateTime?
+  expiresAt    DateTime?
+  isPublished  Boolean              @default(false)
+  targetRoles  UserRole[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  author       User                 @relation("AnnouncementAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([authorId])
+  @@index([isPublished])
+  @@index([publishedAt])
+  @@map("announcements")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  resource  String
+  resourceId String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

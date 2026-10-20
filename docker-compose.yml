@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: alumni-connect-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-alumni_connect}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-alumni_connect_dev}
+      POSTGRES_DB: ${DB_NAME:-alumni_connect}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-alumni_connect} -d ${DB_NAME:-alumni_connect}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - alumni-connect-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: alumni-connect-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - alumni-connect-network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: alumni-connect-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - alumni-connect-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  alumni-connect-network:
+    driver: bridge
