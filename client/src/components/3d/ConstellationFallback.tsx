@@ -76,7 +76,8 @@ export function ConstellationFallback({ className, reason }: ConstellationFallba
               r={i % 3 === 0 ? 2.1 : 1.5}
               fill={i % 5 === 0 ? '#22D3EE' : i % 2 === 0 ? '#7C3AED' : '#818CF8'}
             />
-            <circle cx={x} cy={y} r={i % 3 === 0 ? 4.4 : 3.1} fill="currentColor" opacity="0.08" />
+            {/* Halo uses an explicit white so it reads on the navy panel. */}
+            <circle cx={x} cy={y} r={i % 3 === 0 ? 4.4 : 3.1} fill="#FFFFFF" opacity="0.1" />
           </g>
         ))}
       </svg>
