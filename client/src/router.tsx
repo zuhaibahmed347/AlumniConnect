@@ -64,7 +64,7 @@ export const router = createBrowserRouter([
   { path: '/mentorship', element: <MentorshipProgramPage />, errorElement: <RouteError /> },
   { path: '/mentorship/relationships', element: <MentorshipRelationshipsPage />, errorElement: <RouteError /> },
   { path: '/jobs/:id', element: <JobDetailsPage />, errorElement: <RouteError /> },
-  { path: '/events/:id', element: <EventDetailsPage />, errorElement: <RouteError /> },
+  { path: '/events/:eventId', element: <EventDetailsPage />, errorElement: <RouteError /> },
 
   /* Admin routes */
   { path: '/admin', element: <AdminDashboardPage />, errorElement: <RouteError /> },

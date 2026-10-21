@@ -23,8 +23,7 @@ export function AdminEventAdministrationPage() {
         description:
           'Biggest alumni gathering of the year with keynotes, panels, and gala dinner.',
         shortDescription: 'Annual reunion with keynotes, panels, and gala dinner.',
-        coverImageUrl:
-          'https://images.unsplash.com/photo-1559rad01662-a9a1651cf9e1?w=800&h=400&fit=crop',
+        coverImageUrl: '/images/events/reunion.jpg',
         startDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 45),
         endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 45 + 1000 * 60 * 60 * 5),
         timezone: 'Asia/Karachi',
@@ -43,8 +42,9 @@ export function AdminEventAdministrationPage() {
         description:
           '30+ tech companies hiring alumni. On-site interviews available.',
         shortDescription: '30+ tech companies hiring alumni.',
-        coverImageUrl:
-          'https://images.unsplash.com/photo-1460925895917-auJ3t1wbp4ae?w=800&h=400&fit=crop',
+        // No photo supplied for this event yet — empty string renders the
+        // designed placeholder box instead of a 404 <img>.
+        coverImageUrl: '',
         startDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
         endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 + 1000 * 60 * 60 * 6),
         timezone: 'Asia/Karachi',
@@ -63,8 +63,9 @@ export function AdminEventAdministrationPage() {
         description:
           'Panel discussion with women tech leaders globally.',
         shortDescription: 'Panel discussion with women tech leaders.',
-        coverImageUrl:
-          'https://images.unsplash.com/photo-1517665885307-667bb34d1172?w=800&h=400&fit=crop',
+        // No photo supplied for this event yet — empty string renders the
+        // designed placeholder box instead of a 404 <img>.
+        coverImageUrl: '',
         startDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 15),
         endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 15 + 1000 * 60 * 60 * 2),
         timezone: 'UTC',

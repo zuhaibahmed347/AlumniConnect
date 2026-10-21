@@ -25,7 +25,7 @@ export function EventDetailsPage() {
       slug: 'annual-alumni-reunion-2024',
       description: 'Join us for the biggest alumni gathering of the year! Reconnect with old friends, network with fellow graduates, and celebrate our shared journey. Featuring keynote speakers, panel discussions, and a gala dinner.',
       shortDescription: 'Annual reunion with keynotes, panels, and gala dinner.',
-      coverImageUrl: 'https://images.unsplash.com/photo-1559rad01662-a9a1651cf9e1?w=800&h=400&fit=crop',
+      coverImageUrl: '/images/events/reunion.jpg',
 
       startDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 45),
       endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 45 + 1000 * 60 * 60 * 5),
