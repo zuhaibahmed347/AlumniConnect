@@ -42,9 +42,7 @@ export function AdminEventAdministrationPage() {
         description:
           '30+ tech companies hiring alumni. On-site interviews available.',
         shortDescription: '30+ tech companies hiring alumni.',
-        // No photo supplied for this event yet — empty string renders the
-        // designed placeholder box instead of a 404 <img>.
-        coverImageUrl: '',
+        coverImageUrl: '/images/events/tech-career-fair.jpg',
         startDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
         endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 + 1000 * 60 * 60 * 6),
         timezone: 'Asia/Karachi',
@@ -63,9 +61,7 @@ export function AdminEventAdministrationPage() {
         description:
           'Panel discussion with women tech leaders globally.',
         shortDescription: 'Panel discussion with women tech leaders.',
-        // No photo supplied for this event yet — empty string renders the
-        // designed placeholder box instead of a 404 <img>.
-        coverImageUrl: '',
+        coverImageUrl: '/images/events/women-in-tech.jpg',
         startDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 15),
         endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 15 + 1000 * 60 * 60 * 2),
         timezone: 'UTC',
