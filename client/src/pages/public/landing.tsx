@@ -341,7 +341,7 @@ export function LandingPage() {
               <MediaImage
                 src="/images/seminar.jpg"
                 alt="Alumni and students attending a seminar at Sukkur IBA"
-                className="aspect-[599/316] rounded-2xl shadow-card lg:order-2"
+                className="aspect-[16/9] rounded-2xl shadow-card lg:order-2"
                 imgClassName="object-cover object-center"
               />
 
