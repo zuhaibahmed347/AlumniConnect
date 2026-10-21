@@ -1,4 +1,4 @@
-import { Avatar } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Menu, Bell } from 'lucide-react'
 import { useEffect } from 'react'
@@ -44,7 +44,10 @@ export function DashboardPage() {
           </div>
           <div className="relative">
             <div>
-              <Avatar className="h-8 w-8">UA</Avatar>
+              <Avatar className="h-8 w-8">
+                <AvatarImage src="/images/avatar.jpg" alt="Your profile" />
+                <AvatarFallback>UA</AvatarFallback>
+              </Avatar>
             </div>
             <div className="absolute right-0 top-full mt-2 w-36 rounded-lg bg-white px-4 py-3 shadow-sm border border-border/50 hidden md:block" aria-label="User menu">
               <a href="/profile" className="block text-sm text-primary hover:text-secondary mb-1">Profile</a>

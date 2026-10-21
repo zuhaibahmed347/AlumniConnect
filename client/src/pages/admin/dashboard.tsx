@@ -1,5 +1,5 @@
 import { Bell } from 'lucide-react'
-import { Avatar } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Users, Calendar, TrendingUp, MessageCircle, Zap, Layout, Settings, LogOut, BarChart3 } from 'lucide-react'
 import { useEffect } from 'react'
@@ -53,11 +53,11 @@ export function AdminDashboardPage() {
       {/* Sidebar */}
       <aside className="w-64 bg-sidebar h-screen border-r border-border/50 flex flex-col">
         <div className="p-4 border-b border-border/50">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7l7 9z" />
-            </svg>
-          </div>
+          <img
+            src="/images/university-logo.jpg"
+            alt="Sukkur IBA University"
+            className="h-8 w-8 rounded-lg object-cover"
+          />
           <span className="text-xl font-bold ml-3">Admin</span>
         </div>
         <nav className="flex-1 p-2">
@@ -150,7 +150,10 @@ export function AdminDashboardPage() {
                 aria-label="Profile"
                 className="relative"
               >
-                <Avatar className="h-6 w-6">UA</Avatar>
+                <Avatar className="h-6 w-6">
+                  <AvatarImage src="/images/avatar.jpg" alt="Your profile" />
+                  <AvatarFallback>UA</AvatarFallback>
+                </Avatar>
               </Button>
             </div>
           </div>
