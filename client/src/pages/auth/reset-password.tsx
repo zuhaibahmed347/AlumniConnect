@@ -63,11 +63,11 @@ export function ResetPasswordPage() {
       <div className="max-w-md mx-auto w-full space-y-8">
         {/* Brand Header */}
         <div className="text-center">
-          <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mx-auto mb-4">
-            <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7l7 9z" />
-            </svg>
-          </div>
+          <img
+            src="/images/university-logo.jpg"
+            alt="Sukkur IBA University"
+            className="h-12 w-12 rounded-lg object-cover mx-auto mb-4"
+          />
           <h2 className="text-2xl font-bold tracking-tight mb-2">AlumniConnect</h2>
           <p className="text-secondary">Reset your password</p>
         </div>

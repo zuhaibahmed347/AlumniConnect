@@ -1,4 +1,4 @@
-import { Avatar } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -18,7 +18,7 @@ export function ProfilePage() {
       email: 'ahmed.hassan@iba-suk.edu.pk',
       role: 'MEMBER',
       status: 'ACTIVE',
-      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+      avatarUrl: '/images/avatar.jpg',
       headline: 'Software Engineer at TechCorp',
       bio: ' passionate about building scalable web applications and mentoring junior developers. I graduated from Sukkur IBA in 2020 with a degree in Computer Science.',
       location: 'Karachi, Pakistan',
@@ -90,9 +90,10 @@ export function ProfilePage() {
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Avatar
-              className="h-10 w-10 rounded-full"
-              >{user?.name?.substring(0, 2) || 'UA'}</Avatar>
+            <Avatar className="h-10 w-10 rounded-full">
+              <AvatarImage src={user?.avatarUrl} alt={user?.name || 'Profile photo'} />
+              <AvatarFallback>{user?.name?.substring(0, 2) || 'UA'}</AvatarFallback>
+            </Avatar>
             <div>
               <h1 className="text-xl font-bold">{user?.name}</h1>
               <p className="text-sm text-secondary/80">{user?.email}</p>

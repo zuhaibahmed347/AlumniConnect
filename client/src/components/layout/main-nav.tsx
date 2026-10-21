@@ -1,4 +1,4 @@
-import { Avatar } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Menu } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -11,11 +11,11 @@ export function MainNav() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
         {/* Left - Logo and Nav */}
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7l7 9z" />
-            </svg>
-          </div>
+          <img
+            src="/images/university-logo.jpg"
+            alt="Sukkur IBA University"
+            className="h-8 w-8 rounded-lg object-cover"
+          />
           <span className="text-xl font-bold tracking-tight">AlumniConnect</span>
         </div>
 
@@ -37,8 +37,10 @@ export function MainNav() {
       {/* Right - User Menu */}
       <div className="flex items-center gap-3">
         <div className="relative">
-          <div>
-            <Avatar className="h-8 w-8">UA</Avatar>
+          <div>              <Avatar className="h-8 w-8">
+                <AvatarImage src="/images/avatar.jpg" alt="Your profile" />
+                <AvatarFallback>UA</AvatarFallback>
+              </Avatar>
           </div>
           <div className="absolute right-0 top-full mt-2 w-32 rounded-lg bg-white px-3 py-2 shadow-sm border border-border/50 hidden md:block" aria-label="User menu">
             <a href="/profile" className="block text-sm text-primary hover:text-secondary mb-1">Profile</a>

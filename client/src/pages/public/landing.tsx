@@ -172,11 +172,11 @@ export function LandingPage() {
         <nav className="border-b border-border/50 bg-background/80 backdrop-blur-md fixed w-full z-50">
           <div className="page-container py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7l7 9z" />
-                </svg>
-              </div>
+            <img
+              src="/images/university-logo.jpg"
+              alt="Sukkur IBA University"
+              className="h-8 w-8 rounded-lg object-cover"
+            />
               <span className="text-xl font-bold tracking-tight">AlumniConnect</span>
             </div>
             <div className="hidden sm:flex items-center gap-6">
