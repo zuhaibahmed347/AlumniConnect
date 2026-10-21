@@ -22,7 +22,7 @@ export function AdminJobAdministrationPage() {
         title: 'Senior Full Stack Engineer',
         slug: 'senior-full-stack-engineer-techcorp',
         company: 'TechCorp',
-        companyLogoUrl: 'https://logo.clearbit.com/techcorp.com',
+        companyLogoUrl: '/images/logos/techcorp.jpg',
         description:
           'We are looking for a Senior Full Stack Engineer to join our core product team.',
         requirements: '5+ years experience with React, Node.js, TypeScript, PostgreSQL.',
@@ -44,7 +44,7 @@ export function AdminJobAdministrationPage() {
         title: 'Data Scientist - NLP',
         slug: 'data-scientist-nlp-ai-innovations',
         company: 'AI Innovations',
-        companyLogoUrl: 'https://logo.clearbit.com/ai-innovations.com',
+        companyLogoUrl: '/images/logos/ai-innovations.jpg',
         description:
           'Join our NLP research team building next-generation language models.',
         requirements: 'PhD or MS in CS/ML. Strong publication record in NLP.',
@@ -66,7 +66,7 @@ export function AdminJobAdministrationPage() {
         title: 'UX Design Intern',
         slug: 'ux-design-intern-creative-studio',
         company: 'Creative Studio',
-        companyLogoUrl: 'https://logo.clearbit.com/creativestudio.com',
+        companyLogoUrl: '/images/logos/creative-studio.jpg',
         description:
           'Summer internship program for aspiring UX designers.',
         requirements: 'Currently pursuing design degree. Figma proficiency.',

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Loader2, Calendar, Clock } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Avatar } from '@/components/ui/avatar'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 
 export function JobDetailsPage() {
   const { jobId } = useParams<{ jobId: string }>()
@@ -26,7 +26,7 @@ export function JobDetailsPage() {
       id: jobId || '1',
       title: 'Senior Full Stack Engineer',
       company: 'TechCorp',
-      companyLogoUrl: 'https://logo.clearbit.com/techcorp.com',
+      companyLogoUrl: '/images/logos/techcorp.jpg',
       companyWebsite: 'https://techcorp.com',
       description: 'We are looking for a Senior Full Stack Engineer to join our core product team. You will build features end-to-end, mentor junior engineers, and contribute to architectural decisions.',
       requirements: '5+ years experience with React, Node.js, TypeScript, PostgreSQL. Experience with AWS and Kubernetes preferred.',
@@ -98,9 +98,10 @@ export function JobDetailsPage() {
             <Button variant="ghost" size="sm" onClick={() => navigate('/jobs')}>
               ← Back to Jobs
             </Button>
-            <Avatar
-              className="h-8 w-8"
-              >{(job.company || '').substring(0, 2)}</Avatar>
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={job.companyLogoUrl} alt={`${job.company} logo`} />
+              <AvatarFallback>{(job.company || '').substring(0, 2)}</AvatarFallback>
+            </Avatar>
             <div>
               <p className="font-medium">{job.title}</p>
               <p className="text-sm text-secondary/80">
