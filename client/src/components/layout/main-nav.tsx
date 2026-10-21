@@ -1,64 +1,86 @@
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Menu } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 export function MainNav() {
   const navigate = useNavigate()
 
   return (
-    <nav className="border-b border-border/50 bg-background/80 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-        {/* Left - Logo and Nav */}
-        <div className="flex items-center gap-2">
+    <header className="sticky top-0 z-50 border-b border-border/80 bg-background/90 backdrop-blur-md">
+      <div className="page-container h-16 flex items-center justify-between gap-8">
+        {/* Zone 1: Brand Lockup */}
+        <Link
+          to="/"
+          className="flex items-center gap-2.5 text-lg font-display font-bold tracking-tight text-foreground whitespace-nowrap shrink-0"
+        >
           <img
             src="/images/university-logo.jpg"
             alt="Sukkur IBA University"
-            className="h-8 w-8 rounded-lg object-cover"
+            className="h-8 w-8 rounded-lg object-cover ring-1 ring-border"
           />
-          <span className="text-xl font-bold tracking-tight">AlumniConnect</span>
-        </div>
+          <span>AlumniConnect</span>
+        </Link>
 
-        {/* Mobile Menu Button */}
-        <button className="md:hidden p-2 rounded-lg hover:bg-primary/10" aria-label="Open main menu">
-          <Menu className="h-5 w-5" />
-        </button>
+        {/* Zone 2: Desktop Nav Links */}
+        <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-secondary">
+          <Link
+            to="/dashboard"
+            className="hover:text-foreground hover:underline underline-offset-8 decoration-primary/60 transition-colors whitespace-nowrap shrink-0"
+          >
+            Dashboard
+          </Link>
+          <Link
+            to="/alumni"
+            className="hover:text-foreground hover:underline underline-offset-8 decoration-primary/60 transition-colors whitespace-nowrap shrink-0"
+          >
+            Directory
+          </Link>
+          <Link
+            to="/jobs"
+            className="hover:text-foreground hover:underline underline-offset-8 decoration-primary/60 transition-colors whitespace-nowrap shrink-0"
+          >
+            Jobs
+          </Link>
+          <Link
+            to="/events"
+            className="hover:text-foreground hover:underline underline-offset-8 decoration-primary/60 transition-colors whitespace-nowrap shrink-0"
+          >
+            Events
+          </Link>
+          <Link
+            to="/mentorship"
+            className="hover:text-foreground hover:underline underline-offset-8 decoration-primary/60 transition-colors whitespace-nowrap shrink-0"
+          >
+            Mentorship
+          </Link>
+        </nav>
 
-        {/* Desktop Nav Links */}
-        <div className="hidden md:flex items-center gap-8">
-          <a href="/dashboard" className="text-sm font-medium text-secondary hover:text-primary transition-colors">Dashboard</a>
-          <a href="/alumni" className="text-sm font-medium text-secondary hover:text-primary transition-colors">Alumni Directory</a>
-          <a href="/jobs" className="text-sm font-medium text-secondary hover:text-primary transition-colors">Jobs</a>
-          <a href="/events" className="text-sm font-medium text-secondary hover:text-primary transition-colors">Events</a>
-          <a href="/mentorship" className="text-sm font-medium text-secondary hover:text-primary transition-colors">Mentorship</a>
+        {/* Zone 3: User Menu & Mobile Toggle */}
+        <div className="flex items-center gap-3 shrink-0">
+          <Link to="/profile" aria-label="Your profile">
+            <Avatar className="h-8 w-8 ring-1 ring-border">
+              <AvatarImage src="/images/avatar.jpg" alt="Your profile" />
+              <AvatarFallback>UA</AvatarFallback>
+            </Avatar>
+          </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/login')}
+            className="hidden sm:inline-flex"
+          >
+            Sign Out
+          </Button>
+          <button
+            type="button"
+            className="md:hidden p-2 rounded-lg hover:bg-stone"
+            aria-label="Open main menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
         </div>
       </div>
-
-      {/* Right - User Menu */}
-      <div className="flex items-center gap-3">
-        <div className="relative">
-          <div>              <Avatar className="h-8 w-8">
-                <AvatarImage src="/images/avatar.jpg" alt="Your profile" />
-                <AvatarFallback>UA</AvatarFallback>
-              </Avatar>
-          </div>
-          <div className="absolute right-0 top-full mt-2 w-32 rounded-lg bg-white px-3 py-2 shadow-sm border border-border/50 hidden md:block" aria-label="User menu">
-            <a href="/profile" className="block text-sm text-primary hover:text-secondary mb-1">Profile</a>
-            <a href="/settings" className="block text-sm text-primary hover:text-secondary mb-1">Settings</a>
-            <a href="/messages" className="block text-sm text-primary hover:text-secondary mb-1">Messages</a>
-            <a href="/notifications" className="block text-sm text-primary hover:text-secondary mb-1">Notifications</a>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                navigate('/logout')
-              }}
-            >
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </div>
-    </nav>
+    </header>
   )
 }

@@ -1,74 +1,105 @@
 import type { Config } from 'tailwindcss'
 
-/** AlumniConnect design system — Sukkur IBA University. */
+/** AlumniConnect design system — Sukkur IBA University.
+ *  Palette: Warm Alabaster Ivory, Midnight Obsidian, Meridian Emerald & Burnished Gold.
+ *  Typography: Fraunces (Display), Plus Jakarta Sans / Manrope (Body), JetBrains Mono (Tabular Data).
+ */
 
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
-        // Core surfaces
-        background: '#F7F8FC',
-        foreground: '#171B2E',
+        // 60% Dominant neutral canvas & 30% structural surfaces
+        background: '#FAF8F5',
+        foreground: '#0D1821',
         card: '#FFFFFF',
-        'card-foreground': '#171B2E',
-        // Brand palette from tokens
+        'card-foreground': '#0D1821',
+        stone: '#F2EFE9',
+        obsidian: '#091422',
+        'obsidian-light': '#102238',
+        // 10% High-intent brand palette
         primary: {
-          DEFAULT: '#4338CA',
+          DEFAULT: '#0D6E5B',
           foreground: '#FFFFFF',
         },
         secondary: {
-          DEFAULT: '#667085',
+          DEFAULT: '#4B5868',
           foreground: '#FFFFFF',
         },
-        violet: '#7C3AED',
-        accent: {
-          DEFAULT: '#EEF2FF',
-          foreground: '#4338CA',
+        violet: '#D97706',
+        gold: {
+          DEFAULT: '#D97706',
+          bright: '#F59E0B',
+          soft: '#FEF3C7',
         },
-        navy: '#10152F',
-        cyan: '#22D3EE',
+        emerald: {
+          DEFAULT: '#0D6E5B',
+          bright: '#10B981',
+          soft: '#E6F4F1',
+        },
+        accent: {
+          DEFAULT: '#E6F4F1',
+          foreground: '#0D6E5B',
+        },
+        navy: '#091422',
+        cyan: '#2DD4BF',
         // Feedback
-        success: '#15803D',
-        warning: '#D97706',
-        error: '#DC2626',
+        success: '#0F766E',
+        warning: '#B45309',
+        error: '#B91C1C',
         // Utilities
         muted: {
-          DEFAULT: '#F3F4F6',
-          foreground: '#667085',
+          DEFAULT: '#F2EFE9',
+          foreground: '#4B5868',
         },
-        border: '#E5E7EB',
-        input: '#E5E7EB',
-        ring: '#4338CA',
+        sidebar: {
+          DEFAULT: '#091422',
+          foreground: '#FAF8F5',
+        },
+        border: '#E3DFD5',
+        input: '#E3DFD5',
+        ring: '#0D6E5B',
       },
       fontFamily: {
-        // Manrope is the primary typeface; Inter + system fonts are the fallback stack.
         sans: [
+          'Plus Jakarta Sans',
           'Manrope Variable',
           'Manrope',
           'Inter Variable',
           'Inter',
           'system-ui',
           '-apple-system',
-          'Segoe UI',
           'sans-serif',
         ],
         heading: [
+          'Fraunces',
+          'Plus Jakarta Sans',
           'Manrope Variable',
           'Manrope',
-          'Inter Variable',
-          'Inter',
-          'system-ui',
-          '-apple-system',
-          'Segoe UI',
-          'sans-serif',
+          'Georgia',
+          'serif',
+        ],
+        display: [
+          'Fraunces',
+          'Plus Jakarta Sans',
+          'Manrope Variable',
+          'Georgia',
+          'serif',
+        ],
+        mono: [
+          'JetBrains Mono',
+          'ui-monospace',
+          'SFMono-Regular',
+          'Menlo',
+          'monospace',
         ],
       },
       boxShadow: {
-        card: '0 1px 3px 0 rgb(16 21 47 / 0.06), 0 1px 2px -1px rgb(16 21 47 / 0.08)',
-        'card-hover': '0 10px 24px -6px rgb(16 21 47 / 0.12)',
-        // Subtle shadow for 3D nodes
-        glow: '0 0 10px rgba(67, 56, 202, 0.3)',
+        card: '0 2px 6px -1px rgb(9 20 34 / 0.05), 0 1px 3px -1px rgb(9 20 34 / 0.04)',
+        'card-hover': '0 16px 36px -8px rgb(9 20 34 / 0.11), 0 4px 10px -2px rgb(9 20 34 / 0.05)',
+        glow: '0 0 24px rgba(13, 110, 91, 0.28)',
+        'gold-glow': '0 0 24px rgba(245, 158, 11, 0.25)',
       },
       zIndex: {
         dropdown: '1000',
@@ -76,8 +107,6 @@ export default {
         modal: '1030',
         tooltip: '1040',
       },
-      // Shared easing so CSS transitions match the Motion for React curves
-      // used across the app (lib/motion.ts).
       transitionTimingFunction: {
         'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)',
       },
@@ -109,7 +138,6 @@ export default {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'caret-blink': 'caret-blink 1s step-end infinite',
-        // Gentle idle float for the CSS constellation fallback.
         'constellation-drift': 'constellation-drift 14s ease-in-out infinite',
       },
     },

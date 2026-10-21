@@ -9,6 +9,7 @@ import { loginSchema } from '@alumni-connect/shared/schemas'
 import { useNavigate, Link } from 'react-router-dom'
 import { toast } from '@/lib/toast'
 import { api, setToken, ApiError } from '@/services/api'
+import { motion } from 'framer-motion'
 
 type FormValues = z.infer<typeof loginSchema>
 
@@ -17,7 +18,13 @@ interface LoginResponse {
   accessToken: string
 }
 
-const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'ADMIN', 'EVENT_MANAGER', 'MODERATOR', 'MENTORSHIP_MANAGER'])
+const ADMIN_ROLES = new Set([
+  'SUPER_ADMIN',
+  'ADMIN',
+  'EVENT_MANAGER',
+  'MODERATOR',
+  'MENTORSHIP_MANAGER',
+])
 
 export function SignInPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -49,7 +56,8 @@ export function SignInPage() {
     } catch (error) {
       toast({
         title: 'Sign In Failed',
-        description: error instanceof ApiError ? error.message : 'Invalid credentials',
+        description:
+          error instanceof ApiError ? error.message : 'Invalid credentials',
         variant: 'destructive',
       })
     } finally {
@@ -58,83 +66,118 @@ export function SignInPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
-      <div className="max-w-md mx-auto w-full space-y-8">
+    <main className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(13,110,91,0.08),transparent_50%),radial-gradient(circle_at_80%_80%,rgba(217,119,6,0.07),transparent_50%)]"
+      />
+
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 240, damping: 26 }}
+        className="max-w-md w-full space-y-7 relative z-10"
+      >
         {/* Brand Header */}
         <div className="text-center">
-          <img
-            src="/images/university-logo.jpg"
-            alt="Sukkur IBA University"
-            className="h-12 w-12 rounded-lg object-cover mx-auto mb-4"
-          />
-          <h2 className="text-2xl font-bold tracking-tight mb-2">AlumniConnect</h2>
-          <p className="text-secondary">Sign in to your account</p>
+          <Link to="/" className="inline-block mb-4">
+            <img
+              src="/images/university-logo.jpg"
+              alt="Sukkur IBA University"
+              className="h-12 w-12 rounded-xl object-cover mx-auto ring-1 ring-border shadow-sm"
+            />
+          </Link>
+          <p className="text-xs font-mono uppercase tracking-wider text-primary mb-1">
+            Sukkur IBA University
+          </p>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-foreground mb-1.5">
+            Welcome back to AlumniConnect
+          </h1>
+          <p className="text-sm text-secondary">
+            Sign in to access the alumni directory, mentorship, and referrals
+          </p>
         </div>
 
         {/* Sign In Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg p-6 shadow-sm space-y-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="bg-white rounded-2xl border border-border p-6 sm:p-8 shadow-card space-y-5"
+        >
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-2">
-              Email Address
+            <label htmlFor="email" className="block text-xs font-semibold mb-2">
+              Institutional or Personal Email
             </label>
             <Input
               id="email"
               type="email"
               {...register('email')}
-              placeholder="Enter your email"
-              className={cn(errors.email && 'border-red-500')}
+              placeholder="name@iba-suk.edu.pk"
+              className={cn('h-10', errors.email && 'border-error')}
               aria-invalid={errors.email ? true : undefined}
             />
-            {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="text-xs text-error mt-1.5">{errors.email.message}</p>
+            )}
           </div>
 
           {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-2">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="password" className="block text-xs font-semibold">
+                Password
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 {...register('password')}
                 placeholder="Enter your password"
-                className={cn(errors.password && 'border-red-500')}
+                className={cn('h-10 pr-14', errors.password && 'border-error')}
                 aria-invalid={errors.password ? true : undefined}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-primary"
-                aria-label="Toggle password visibility">
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-secondary hover:text-foreground"
+                aria-label="Toggle password visibility"
+              >
                 {showPassword ? 'Hide' : 'Show'}
               </button>
             </div>
-            {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>}
+            {errors.password && (
+              <p className="text-xs text-error mt-1.5">{errors.password.message}</p>
+            )}
           </div>
 
           {/* Submit Button */}
-          <Button type="submit" disabled={isLoading} className="w-full">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full h-10 text-sm font-semibold rounded-xl"
+          >
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
 
-          {/* Forgot Password Link */}
-          <p className="text-sm text-secondary/70 text-right">
-            <Link to="/forgot-password" className="underline hover:text-primary">
-              Forgot password?
-            </Link>
-          </p>
-
           {/* Register Link */}
-          <p className="text-sm text-secondary/70 text-center">
-            Don't have an account?{' '}
-            <Link to="/register" className="font-medium underline hover:text-primary">
-              Register
+          <p className="text-xs text-secondary text-center pt-2 border-t border-border">
+            New to the alumni network?{' '}
+            <Link
+              to="/register"
+              className="font-semibold text-primary hover:underline"
+            >
+              Claim your profile
             </Link>
           </p>
         </form>
-      </div>
+      </motion.div>
     </main>
   )
 }

@@ -16,10 +16,9 @@ export interface MediaImageProps
 /**
  * Image that never breaks the layout.
  *
- * The <img> is layered over a branded gradient box, so if the asset is missing
- * (not yet uploaded, typo in the path, 404 in production) the section keeps its
- * shape and shows the gradient instead of a broken-image icon or a collapsed
- * container. Static assets live in `public/images/` and are served verbatim.
+ * The <img> is layered over a branded Meridian Emerald & Obsidian gradient box,
+ * so if the asset is missing or fails to load, the section keeps its shape and
+ * displays a refined architectural fallback.
  */
 export function MediaImage({
   src,
@@ -34,18 +33,19 @@ export function MediaImage({
   return (
     <div
       className={cn(
-        'relative isolate overflow-hidden bg-gradient-to-br from-navy via-primary to-violet',
+        'relative isolate overflow-hidden bg-gradient-to-br from-[#091422] via-[#0D6E5B] to-[#102238]',
         className,
       )}
     >
       {failed ? (
-        <div role="img" aria-label={alt} className="absolute inset-0 flex items-end p-4">
-          <span className="text-xs leading-relaxed text-white/70">{alt}</span>
+        <div role="img" aria-label={alt} className="absolute inset-0 flex items-end p-5">
+          <span className="text-xs leading-relaxed text-white/80 font-medium">{alt}</span>
         </div>
       ) : (
         <img
           src={src}
           alt={alt}
+          referrerPolicy="no-referrer"
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"
           fetchPriority={eager ? 'high' : 'auto'}

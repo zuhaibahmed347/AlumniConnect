@@ -1,8 +1,9 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, Loader2, ChevronDown, UserPlus } from 'lucide-react'
+import { Search, Loader2, UserPlus, MapPin, ArrowUpRight } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { motion, Variants } from 'framer-motion'
+import { Link } from 'react-router-dom'
+import { motion, type Variants } from 'framer-motion'
 
 const initialFilters = {
   search: '',
@@ -17,239 +18,262 @@ const initialFilters = {
 }
 
 const directoryEntrance: Variants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (staggerChildren: number = 0.15) => ({
+  hidden: { opacity: 0, y: 16 },
+  visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.5,
+      duration: 0.45,
       ease: [0.16, 1, 0.3, 1],
-      staggerChildren: staggerChildren,
+      staggerChildren: 0.07,
     },
-  }),
+  },
 }
 
 const cardEntrance: Variants = {
-  hidden: { opacity: 0, y: 16, scale: 0.95 },
+  hidden: { opacity: 0, y: 14, scale: 0.98 },
   visible: {
     opacity: 1,
     y: 0,
     scale: 1,
     transition: {
       type: 'spring',
-      stiffness: 200,
-      damping: 25,
-      delay: 0.1,
+      stiffness: 240,
+      damping: 26,
     },
   },
 }
+
+const ALUMNI_DATA = [
+  {
+    id: '1',
+    name: 'Ahmed Hassan',
+    headline: 'Senior Software Engineer · TechCorp',
+    graduationYear: 2020,
+    department: 'Computer Science',
+    location: 'Karachi, Pakistan',
+    avatar: '/images/avatar.jpg',
+    skills: ['TypeScript', 'React', 'Node.js'],
+    connectionStatus: 'Connect',
+  },
+  {
+    id: '2',
+    name: 'Saba Ahmed',
+    headline: 'Growth & Brand Lead · Creative Studio',
+    graduationYear: 2019,
+    department: 'Business Administration',
+    location: 'Lahore, Pakistan',
+    avatar: '/images/avatar.jpg',
+    skills: ['Product Marketing', 'Growth', 'Analytics'],
+    connectionStatus: 'Connected',
+  },
+  {
+    id: '3',
+    name: 'Usman Khan',
+    headline: 'Principal Data Scientist · DataInsights',
+    graduationYear: 2021,
+    department: 'Computer Science',
+    location: 'Islamabad, Pakistan',
+    avatar: '/images/avatar.jpg',
+    skills: ['Python', 'Machine Learning', 'SQL'],
+    connectionStatus: 'Connect',
+  },
+  {
+    id: '4',
+    name: 'Fatima Shah',
+    headline: 'VP People & Talent · HumaneCorp',
+    graduationYear: 2018,
+    department: 'Business Administration',
+    location: 'Karachi, Pakistan',
+    avatar: '/images/avatar.jpg',
+    skills: ['Executive Search', 'People Ops', 'Mentorship'],
+    connectionStatus: 'Connected',
+  },
+]
 
 export function AlumniDirectoryPage() {
   const [filters, setFilters] = useState<typeof initialFilters>(initialFilters)
   const [page, setPage] = useState(1)
   const [loading] = useState(false)
+  const [connectedIds, setConnectedIds] = useState<Record<string, boolean>>({
+    '2': true,
+    '4': true,
+  })
 
-  // Mock alumni data structure for now
-  const alumniData = [
-    {
-      id: '1',
-      name: 'Ahmed Hassan',
-      headline: 'Software Engineer at TechCorp',
-      graduationYear: 2020,
-      department: 'Computer Science',
-      location: 'Karachi, Pakistan',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
-      skills: ['JavaScript', 'React', 'Node.js'],
-      connectionStatus: 'Not Connected',
-    },
-    {
-      id: '2',
-      name: 'Saba Ahmed',
-      headline: 'Marketing Manager at MegaCorp',
-      graduationYear: 2019,
-      department: 'Business Administration',
-      location: 'Lahore, Pakistan',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop',
-      skills: ['Digital Marketing', 'SEO', 'Content Strategy'],
-      connectionStatus: 'Connected',
-    },
-    {
-      id: '3',
-      name: 'Usman Khan',
-      headline: 'Data Scientist at DataInsights',
-      graduationYear: 2021,
-      department: 'Computer Science',
-      location: 'Islamabad, Pakistan',
-      avatar: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&h=100&fit=crop',
-      skills: ['Python', 'Machine Learning', 'SQL'],
-      connectionStatus: 'Not Connected',
-    },
-    {
-      id: '4',
-      name: 'Fatima Shah',
-      headline: 'HR Manager at HumaneCorp',
-      graduationYear: 2018,
-      department: 'Business Administration',
-      location: 'Karachi, Pakistan',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-d9c69b4316e4?w=100&h=100&fit=crop',
-      skills: ['HR', 'Recruitment', 'Employee Relations'],
-      connectionStatus: 'Connected',
-    },
-  ]
+  const filteredAlumni = ALUMNI_DATA.filter((alum) => {
+    const q = filters.search.trim().toLowerCase()
+    const matchSearch =
+      !q ||
+      alum.name.toLowerCase().includes(q) ||
+      alum.headline.toLowerCase().includes(q) ||
+      alum.department.toLowerCase().includes(q) ||
+      alum.skills.some((s) => s.toLowerCase().includes(q))
+    const matchYear =
+      !filters.graduationYear || alum.graduationYear === filters.graduationYear
+    const matchLocation =
+      !filters.location ||
+      alum.location.toLowerCase().includes(filters.location.toLowerCase())
+    const matchSkill =
+      filters.skills.length === 0 ||
+      filters.skills.some((s) => alum.skills.includes(s))
+    return matchSearch && matchYear && matchLocation && matchSkill
+  })
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault()
     setPage(1)
   }
 
+  const toggleSkill = (skill: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      skills: prev.skills.includes(skill)
+        ? prev.skills.filter((s) => s !== skill)
+        : [...prev.skills, skill],
+    }))
+  }
+
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md">
+        <div className="page-container py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold tracking-tight">Alumni Directory</h1>
-            <Search className="h-5 w-5 text-secondary" />
+            <Link
+              to="/"
+              className="text-xs font-mono uppercase tracking-wider text-primary hover:underline"
+            >
+              AlumniConnect
+            </Link>
+            <span aria-hidden="true" className="text-border">
+              /
+            </span>
+            <h1 className="font-display text-xl font-bold tracking-tight">
+              Alumni Directory
+            </h1>
           </div>
-          <Button variant="ghost" size="sm">
-            <UserPlus className="h-4 w-4 mr-2" /> Add Connection
-          </Button>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/dashboard"
+              className="text-xs font-medium text-secondary hover:text-foreground transition-colors"
+            >
+              Dashboard
+            </Link>
+            <Button variant="default" size="sm" className="px-3.5 py-2 h-auto">
+              <UserPlus className="h-3.5 w-3.5 mr-1.5" /> Invite Classmate
+            </Button>
+          </div>
         </div>
       </header>
 
-      {/* Filters Section */}
-      <section className="p-4 sm:p-6 bg-white mb-6">
-        <form onSubmit={onSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-          {/* Search */}
-          <div>
-            <label htmlFor="search" className="block text-sm font-medium mb-1">
-              Search by name, skills, or department
-            </label>
-            <Input
-              id="search"
-              placeholder="Type to search..."
-              value={filters.search}
-              onChange={(e) =>
-                setFilters({ ...filters, search: e.target.value })
-              }
-            />
-          </div>
-
-          {/* Graduation Year */}
-          <div>
-            <label htmlFor="graduationYear" className="block text-sm font-medium mb-1">
-              Graduation Year
-            </label>
-            <Input
-              id="graduationYear"
-              type="number"
-              placeholder="e.g. 2020"
-              value={filters.graduationYear || ''}
-              onChange={(e) =>
-                setFilters({
-                  ...filters,
-                  graduationYear: e.target
-                    ? parseInt(e.target.value)
-                    : undefined,
-                })
-              }
-            />
-          </div>
-
-          {/* Degree */}
-          <div>
-            <label htmlFor="degree" className="block text-sm font-medium mb-1">
-              Degree
-            </label>
-            <Input
-              id="degree"
-              placeholder="e.g. BS"
-              value={filters.degree || ''}
-              onChange={(e) =>
-                setFilters({ ...filters, degree: e.target.value })
-              }
-            />
-          </div>
-
-          {/* Location */}
-          <div>
-            <label htmlFor="location" className="block text-sm font-medium mb-1">
-              Location
-            </label>
-            <Input
-              id="location"
-              placeholder="e.g. Karachi"
-              value={filters.location || ''}
-              onChange={(e) =>
-                setFilters({ ...filters, location: e.target.value })
-              }
-            />
-          </div>
-
-          {/* Skills Filter */}
-          <div>
-            <label htmlFor="skills" className="block text-sm font-medium mb-1">
-              Skills
-            </label>
-            <div className="flex flex-wrap gap-2">
-              <span
-                className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-medium hover:text-primary hover:bg-primary/5 transition-colors"
-              >
-                All
-                <ChevronDown className="ml-1 h-3 w-3" />
-              </span>
-              <span
-                className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-medium bg-primary/5 text-primary hover:text-white hover:bg-primary transition-colors"
-              >
-                JavaScript
-              </span>
-              <span
-                className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-medium bg-primary/5 text-primary hover:text-white hover:bg-primary transition-colors"
-              >
-                Python
-              </span>
-              <span
-                className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-medium bg-primary/5 text-primary hover:text-white hover:bg-primary transition-colors"
-              >
-                React
-              </span>
+      <div className="page-container py-8 space-y-8">
+        {/* Filters Section */}
+        <section className="rounded-2xl border border-border bg-white p-6 shadow-card">
+          <form
+            onSubmit={onSubmit}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-end"
+          >
+            <div className="lg:col-span-4">
+              <label htmlFor="search" className="block text-xs font-semibold mb-1.5">
+                Search by name, skill, or faculty
+              </label>
+              <div className="relative">
+                <Search className="h-4 w-4 text-secondary absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Input
+                  id="search"
+                  placeholder="e.g. Computer Science, React, Karachi..."
+                  value={filters.search}
+                  onChange={(e) =>
+                    setFilters({ ...filters, search: e.target.value })
+                  }
+                  className="pl-9 h-9"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Sort Options */}
-          <div className="flex items-center gap-2">
-            <select
-              onChange={(e) =>
-                setFilters({ ...filters, sortBy: e.target.value as any })
-              }
-              className="rounded border border-border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="name">Name A-Z</option>
-            </select>
-          </div>
+            <div className="lg:col-span-2">
+              <label
+                htmlFor="graduationYear"
+                className="block text-xs font-semibold mb-1.5"
+              >
+                Class Year
+              </label>
+              <Input
+                id="graduationYear"
+                type="number"
+                placeholder="e.g. 2020"
+                value={filters.graduationYear || ''}
+                onChange={(e) =>
+                  setFilters({
+                    ...filters,
+                    graduationYear: e.target.value
+                      ? parseInt(e.target.value, 10)
+                      : undefined,
+                  })
+                }
+                className="h-9 font-mono tabular-nums"
+              />
+            </div>
 
-          {/* Apply/Reset Buttons */}
-          <div className="flex gap-2 pt-2">
-            <Button type="submit" className="flex-1">
-              Apply Filters
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={() => setFilters(initialFilters)}
-            >
-              Reset
-            </Button>
-          </div>
-        </form>
-      </section>
+            <div className="lg:col-span-3">
+              <label htmlFor="location" className="block text-xs font-semibold mb-1.5">
+                Chapter / City
+              </label>
+              <Input
+                id="location"
+                placeholder="e.g. Karachi, Lahore"
+                value={filters.location || ''}
+                onChange={(e) =>
+                  setFilters({ ...filters, location: e.target.value })
+                }
+                className="h-9"
+              />
+            </div>
 
-      {/* Alumni Grid */}
-      <section className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="lg:col-span-3 flex gap-2">
+              <Button type="submit" className="flex-1 h-9">
+                Apply Filters
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 px-3"
+                onClick={() => setFilters(initialFilters)}
+              >
+                Reset
+              </Button>
+            </div>
+          </form>
+
+          {/* Interactive Skill Filter Buttons */}
+          <div className="mt-4 pt-4 border-t border-border flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-secondary mr-1">
+              Filter by expertise:
+            </span>
+            {['TypeScript', 'React', 'Python', 'Machine Learning', 'Product Marketing'].map(
+              (skill) => {
+                const active = filters.skills.includes(skill)
+                return (
+                  <button
+                    key={skill}
+                    type="button"
+                    onClick={() => toggleSkill(skill)}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                      active
+                        ? 'bg-primary text-white'
+                        : 'bg-stone text-secondary hover:text-foreground'
+                    }`}
+                  >
+                    {skill}
+                  </button>
+                )
+              },
+            )}
+          </div>
+        </section>
+
+        {/* Alumni Grid */}
+        <section>
           <motion.div
             variants={directoryEntrance}
             initial="hidden"
@@ -257,128 +281,118 @@ export function AlumniDirectoryPage() {
           >
             {loading && (
               <div className="min-h-[200px] flex flex-col items-center justify-center py-8 text-secondary">
-                <Loader2 className="h-6 w-6 mx-auto mb-3" />
-                <p>Loading alumni...</p>
+                <Loader2 className="h-6 w-6 mx-auto mb-3 animate-spin" />
+                <p>Loading alumni directory...</p>
               </div>
             )}
 
-            {!loading && alumniData.length === 0 && (
-              <div className="min-h-[200px] flex flex-col items-center justify-center py-8 text-secondary">
-                <svg
-                  className="h-8 w-8 mb-3 opacity-50"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v6a2 2 0 002 2H9a2 2 0 002-2zM5 13l7 7-7 7"
-                  />
-                </svg>
-                <p>No alumni found matching your criteria.</p>
+            {!loading && filteredAlumni.length === 0 && (
+              <div className="rounded-2xl border border-border bg-white p-12 text-center text-secondary">
+                <p className="font-display text-lg font-semibold text-foreground mb-1">
+                  No alumni found matching your criteria
+                </p>
+                <p className="text-sm mb-4">
+                  Try clearing your search query or selecting a different cohort year.
+                </p>
+                <Button variant="outline" onClick={() => setFilters(initialFilters)}>
+                  Reset Filters
+                </Button>
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {alumniData.map((alumni) => (
-                <motion.div
-                  key={alumni.id}
-                  variants={cardEntrance}
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                  style={{ transitionDelay: alumniData.indexOf(alumni) * 0.05 + 's' }}
-                >
-                  <div
-                    className="group rounded-lg border bg-card p-4 hover:bg-card/80 transition-colors cursor-pointer"
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filteredAlumni.map((alumni) => {
+                const isConnected = Boolean(connectedIds[alumni.id])
+                return (
+                  <motion.article
+                    key={alumni.id}
+                    variants={cardEntrance}
+                    className="group rounded-2xl border border-border bg-white p-6 flex flex-col justify-between hover:shadow-card-hover transition-all"
                   >
-                    <div className="h-24 w-24 rounded-md overflow-hidden mb-3">
-                      <img
-                        src={alumni.avatar}
-                        alt={alumni.name}
-                        className="w-full h-full object-cover"
-                      />
-                      {!alumni.avatar && (
-                        <div
-                          className="absolute inset-0 flex items-center justify-center bg-primary/20"
-                        >
-                          <span className="text-xs font-medium text-primary">
-                            {alumni.name.substring(0, 2)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <h4 className="font-medium mb-1">{alumni.name}</h4>
-                    <p className="text-sm text-secondary mb-1">
-                      {alumni.headline}
-                    </p>
-                    <div className="flex flex-wrap gap-1 text-xs">
-                      {alumni.skills.map((skill: string) => (
-                        <span
-                          key={skill}
-                          className="inline-flex items-center rounded-full border border-primary/20 px-2 py-0.5 text-primary"
-                        >
-                          {skill}
+                    <div>
+                      <div className="flex items-start justify-between gap-3 mb-4">
+                        <img
+                          src={alumni.avatar}
+                          alt={alumni.name}
+                          referrerPolicy="no-referrer"
+                          className="h-14 w-14 rounded-xl object-cover ring-1 ring-border"
+                        />
+                        <span className="text-xs font-mono tabular-nums text-secondary">
+                          Class of {alumni.graduationYear}
                         </span>
-                      ))}
+                      </div>
+
+                      <h2 className="font-display text-lg font-bold text-foreground mb-1">
+                        {alumni.name}
+                      </h2>
+                      <p className="text-xs text-secondary leading-relaxed mb-3">
+                        {alumni.headline}
+                      </p>
+
+                      {/* Clean unboxed metadata */}
+                      <p className="text-xs text-secondary/80 flex items-center gap-1.5 mb-4">
+                        <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                        <span>{alumni.location}</span>
+                        <span aria-hidden="true">·</span>
+                        <span>{alumni.department}</span>
+                      </p>
+
+                      <p className="text-xs text-secondary font-mono">
+                        {alumni.skills.join(' · ')}
+                      </p>
                     </div>
-                    <div
-                      className="mt-2 pt-2 border-t border-border/10 flex items-center justify-between"
-                    >
-                      <span className="text-secondary">
-                        {alumni.graduationYear} {alumni.department}
-                      </span>
-                      <span className="text-primary font-medium">
-                        {alumni.connectionStatus}
+
+                    <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setConnectedIds((prev) => ({
+                            ...prev,
+                            [alumni.id]: !prev[alumni.id],
+                          }))
+                        }
+                        className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                          isConnected
+                            ? 'text-success'
+                            : 'text-primary hover:underline'
+                        }`}
+                      >
+                        {isConnected ? 'Connected ✓' : 'Request Introduction'}
+                        {!isConnected && <ArrowUpRight className="h-3.5 w-3.5" />}
+                      </button>
+                      <span className="text-[11px] font-mono text-secondary/70 tabular-nums">
+                        Verified
                       </span>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.article>
+                )
+              })}
             </div>
 
-            {!loading && alumniData.length > 0 && (
-              <div className="mt-6 flex justify-center items-center gap-2 text-sm text-secondary">
-                <span>Page {page} of {Math.ceil(alumniData.length / 10)}</span>
+            {!loading && filteredAlumni.length > 0 && (
+              <div className="mt-8 flex justify-center items-center gap-2 text-xs font-mono text-secondary tabular-nums">
+                <span>
+                  Page {page} of {Math.max(1, Math.ceil(filteredAlumni.length / 10))}
+                </span>
                 <Button
                   variant="outline"
-                  size="default"
-                  className="h-8 w-8 flex items-center justify-center"
-                  onClick={() => setPage(1)}
-                >
-                  First
-                </Button>
-                <Button
-                  variant="outline"
-                  size="default"
-                  className="h-8 w-8 flex items-center justify-center"
+                  size="sm"
                   onClick={() => setPage(Math.max(page - 1, 1))}
                 >
-                  Prev
+                  Previous
                 </Button>
                 <Button
                   variant="outline"
-                  size="default"
-                  className="h-8 w-8 flex items-center justify-center"
-                  onClick={() => setPage(Math.min(page + 1, 4))}
+                  size="sm"
+                  onClick={() => setPage(page + 1)}
                 >
                   Next
-                </Button>
-                <Button
-                  variant="outline"
-                  size="default"
-                  className="h-8 w-8 flex items-center justify-center"
-                  onClick={() => setPage(4)}
-                >
-                  Last
                 </Button>
               </div>
             )}
           </motion.div>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   )
 }

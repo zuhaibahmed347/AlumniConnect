@@ -5,18 +5,20 @@
     "moduleResolution": "bundler",
     "lib": ["ES2022"],
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "..",
     "strict": true,
+    "noImplicitAny": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false,
-    "declaration": true,
-    "declarationMap": true,
+    "declaration": false,
+    "declarationMap": false,
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
+      "@alumni-connect/shared": ["../shared/src/index.ts"],
       "@alumni-connect/shared/*": ["../shared/src/*"]
     }
   },

@@ -1,27 +1,43 @@
 export const color = {
-  deepNavy: '#10152F',
-  primaryIndigo: '#4338CA',
-  secondaryViolet: '#7C3AED',
-  accentCyan: '#22D3EE',
-  mainBackground: '#F7F8FC',
+  // Core architectural surfaces (60% Warm Alabaster & Midnight Obsidian)
+  deepNavy: '#091422',
+  obsidianSurface: '#0F1E30',
+  mainBackground: '#FAF8F5',
+  stoneSurface: '#F2EFE9',
   whiteSurface: '#FFFFFF',
-  primaryText: '#171B2E',
-  secondaryText: '#667085',
-  border: '#E5E7EB',
-  success: '#15803D',
-  warning: '#D97706',
-  error: '#DC2626',
-  // Sukkur IBA specific
-  ibaNavy: '#1A237E',
-  ibaGold: '#FFD700',
+
+  // High-intent brand accents (10% Meridian Emerald & Burnished Gold)
+  primaryIndigo: '#0D6E5B', // Alias preserved for backwards compatibility
+  primaryEmerald: '#0D6E5B',
+  emeraldLight: '#10B981',
+  secondaryViolet: '#D97706', // Alias mapped to warm Burnished Amber
+  burnishedGold: '#D97706',
+  luminousGold: '#F59E0B',
+  accentCyan: '#2DD4BF',
+  terracotta: '#C2410C',
+
+  // Typography & Hairline borders (30% structural hierarchy)
+  primaryText: '#0D1821',
+  secondaryText: '#4B5868',
+  mutedText: '#6E7C8C',
+  border: '#E3DFD5',
+
+  // Semantic feedback
+  success: '#0F766E',
+  warning: '#B45309',
+  error: '#B91C1C',
+
+  // Sukkur IBA institutional heritage
+  ibaNavy: '#091422',
+  ibaGold: '#F59E0B',
 } as const
 
 export const typography = {
   fontFamily: {
-    // Manrope is the primary typeface; system + Inter fonts are the fallback.
-    base: '"Manrope Variable", Manrope, "Inter Variable", Inter, system-ui, -apple-system, sans-serif',
+    base: '"Plus Jakarta Sans", "Manrope Variable", Manrope, system-ui, -apple-system, sans-serif',
     heading:
-      '"Manrope Variable", Manrope, "Inter Variable", Inter, system-ui, -apple-system, sans-serif',
+      '"Fraunces", "Plus Jakarta Sans", "Manrope Variable", Manrope, Georgia, serif',
+    mono: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
   },
   fontSize: {
     xs: '0.75rem',
@@ -45,9 +61,9 @@ export const typography = {
   },
   lineHeight: {
     none: 1,
-    tight: 1.25,
+    tight: 1.12,
     normal: 1.5,
-    relaxed: 1.625,
+    relaxed: 1.65,
   },
 } as const
 
@@ -62,17 +78,17 @@ export const space = {
 } as const
 
 export const borderRadius = {
-  sm: '0.125rem',
-  md: '0.25rem',
-  lg: '0.5rem',
-  xl: '0.75rem',
-  '2xl': '1rem',
+  sm: '0.25rem',
+  md: '0.5rem',
+  lg: '0.75rem',
+  xl: '1rem',
+  '2xl': '1.25rem',
 } as const
 
 export const shadows = {
-  sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-  md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-  lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+  sm: '0 1px 2px 0 rgba(9, 20, 34, 0.04)',
+  md: '0 8px 20px -4px rgba(9, 20, 34, 0.07), 0 2px 6px -1px rgba(9, 20, 34, 0.04)',
+  lg: '0 18px 38px -10px rgba(9, 20, 34, 0.12), 0 4px 10px -2px rgba(9, 20, 34, 0.05)',
   none: 'none',
 } as const
 

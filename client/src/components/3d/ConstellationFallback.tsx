@@ -1,21 +1,18 @@
 /**
- * Static, CSS-only alumni constellation.
+ * Static, CSS-only alumni meridian & constellation fallback.
  *
  * Rendered instead of the WebGL scene on mobile, for users who prefer reduced
  * motion, and on any device where WebGL is unavailable or the canvas fails.
- * It uses the same indigo / violet / cyan palette as the 3D scene so the swap
- * is visually seamless, and every animation is a plain CSS transform that the
- * global `prefers-reduced-motion` rule already disables.
+ * Uses the Meridian Emerald, Burnished Gold, and Luminous Aqua palette on
+ * Deep Midnight Obsidian.
  */
 
-/** Deterministic layout so the fallback never re-shuffles between renders. */
 const nodes = [
-  [12, 20], [30, 12], [48, 24], [66, 14], [86, 22],
-  [8, 46], [26, 40], [44, 52], [62, 42], [82, 48],
-  [16, 74], [36, 82], [54, 70], [74, 78], [90, 66],
+  [14, 22], [30, 13], [48, 24], [67, 15], [85, 24],
+  [10, 48], [27, 41], [50, 48], [71, 42], [88, 50],
+  [18, 75], [37, 81], [55, 72], [75, 79], [89, 68],
 ] as const
 
-/** Index pairs of the connections drawn between nearby nodes. */
 const links = [
   [0, 1], [1, 2], [2, 3], [3, 4],
   [5, 6], [6, 7], [7, 8], [8, 9],
@@ -33,18 +30,18 @@ export interface ConstellationFallbackProps {
 export function ConstellationFallback({ className, reason }: ConstellationFallbackProps) {
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl bg-navy ${className ?? ''}`}
+      className={`relative overflow-hidden rounded-2xl bg-[#091422] ${className ?? ''}`}
       role="img"
       aria-label={
         reason
-          ? `Stylised illustration of a connected alumni network. ${reason}`
-          : 'Stylised illustration of a connected alumni network'
+          ? `Stylised illustration of the Sukkur IBA global alumni meridian network. ${reason}`
+          : 'Stylised illustration of the Sukkur IBA global alumni meridian network'
       }
     >
-      {/* Soft indigo/violet/cyan depth behind the network. */}
+      {/* Rich Meridian Emerald, Burnished Gold & Aqua atmospheric depth */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[radial-gradient(circle_at_30%_25%,rgba(67,56,202,0.45),transparent_55%),radial-gradient(circle_at_72%_70%,rgba(34,211,238,0.28),transparent_50%),radial-gradient(circle_at_60%_20%,rgba(124,58,237,0.32),transparent_45%)]"
+        className="absolute inset-0 bg-[radial-gradient(circle_at_28%_24%,rgba(13,110,91,0.48),transparent_55%),radial-gradient(circle_at_74%_72%,rgba(245,158,11,0.22),transparent_50%),radial-gradient(circle_at_55%_45%,rgba(45,212,191,0.22),transparent_48%)]"
       />
 
       <svg
@@ -54,8 +51,41 @@ export function ConstellationFallback({ className, reason }: ConstellationFallba
         aria-hidden="true"
         focusable="false"
       >
+        {/* Orbital Meridian Rings */}
+        <g fill="none" strokeLinecap="round">
+          <ellipse
+            cx="50"
+            cy="48"
+            rx="32"
+            ry="18"
+            transform="rotate(-22 50 48)"
+            stroke="#F59E0B"
+            strokeWidth="0.3"
+            opacity="0.45"
+          />
+          <ellipse
+            cx="50"
+            cy="48"
+            rx="38"
+            ry="22"
+            transform="rotate(28 50 48)"
+            stroke="#10B981"
+            strokeWidth="0.3"
+            opacity="0.4"
+          />
+          <circle
+            cx="50"
+            cy="48"
+            r="12"
+            stroke="#2DD4BF"
+            strokeWidth="0.25"
+            strokeDasharray="1.5 1.5"
+            opacity="0.5"
+          />
+        </g>
+
         {/* Connections */}
-        <g stroke="#818CF8" strokeWidth="0.25" strokeLinecap="round" opacity="0.35">
+        <g stroke="#2DD4BF" strokeWidth="0.26" strokeLinecap="round" opacity="0.35">
           {links.map(([a, b]) => (
             <line
               key={`${a}-${b}`}
@@ -67,17 +97,30 @@ export function ConstellationFallback({ className, reason }: ConstellationFallba
           ))}
         </g>
 
-        {/* Nodes — the third of each cluster is cyan for a restrained highlight. */}
+        {/* Nodes — Burnished Gold, Meridian Emerald, and Aqua */}
         {nodes.map(([x, y], i) => (
           <g key={`${x}-${y}`}>
             <circle
               cx={x}
               cy={y}
-              r={i % 3 === 0 ? 2.1 : 1.5}
-              fill={i % 5 === 0 ? '#22D3EE' : i % 2 === 0 ? '#7C3AED' : '#818CF8'}
+              r={i === 7 ? 2.8 : i % 3 === 0 ? 2.1 : 1.5}
+              fill={
+                i % 4 === 0
+                  ? '#F59E0B'
+                  : i % 3 === 0
+                    ? '#10B981'
+                    : i % 2 === 0
+                      ? '#2DD4BF'
+                      : '#FAF8F5'
+              }
             />
-            {/* Halo uses an explicit white so it reads on the navy panel. */}
-            <circle cx={x} cy={y} r={i % 3 === 0 ? 4.4 : 3.1} fill="#FFFFFF" opacity="0.1" />
+            <circle
+              cx={x}
+              cy={y}
+              r={i === 7 ? 5.6 : i % 3 === 0 ? 4.4 : 3.1}
+              fill="#FAF8F5"
+              opacity="0.1"
+            />
           </g>
         ))}
       </svg>
