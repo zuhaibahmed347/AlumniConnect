@@ -1,6 +1,7 @@
 import { Bell } from 'lucide-react'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { CampusNewsTicker } from '@/components/ui/campus-news-ticker'
 import { Users, Calendar, TrendingUp, MessageCircle, Zap, Layout, Settings, LogOut, BarChart3 } from 'lucide-react'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -158,6 +159,11 @@ export function AdminDashboardPage() {
             </div>
           </div>
         </header>
+
+        {/* Live Google Search Grounded Campus News Ticker */}
+        <div className="px-6 pt-6">
+          <CampusNewsTicker />
+        </div>
 
         {/* Stats Cards */}
         <section className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

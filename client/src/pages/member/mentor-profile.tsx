@@ -1,5 +1,7 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { ThemeSwitcher } from '@/components/ui/theme-switcher'
+import { toast } from '@/lib/toast'
 import { Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
@@ -79,37 +81,40 @@ export function MentorProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background text-foreground">
       {/* Mentor Header */}
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-md">
+      <header className="border-b border-border/80 bg-background/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar
               size="lg"
-              className="border-2 border-white"
+              className="border border-border"
               >{mentor.name.substring(0, 2)}</Avatar>
             <div>
-              <p className="font-medium">{mentor.name}</p>
-              <p className="text-sm text-secondary/80">
+              <p className="font-medium text-foreground">{mentor.name}</p>
+              <p className="text-sm text-secondary">
                 {mentor.headline}
               </p>
             </div>
           </div>
-          {mentor.isAvailable && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowRequestForm(true)}
-            >
-              Request Mentorship
-            </Button>
-          )}
+          <div className="flex items-center gap-2.5">
+            <ThemeSwitcher />
+            {mentor.isAvailable && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowRequestForm(true)}
+              >
+                Request Mentorship
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
  {/* Mentor Details */}
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <section className="bg-white rounded-lg p-6 mb-8">
+        <section className="bg-card text-foreground border border-border rounded-2xl p-6 mb-8 shadow-card">
           <h2 className="text-lg font-medium mb-4">Profile</h2>
           <p className="text-secondary/80 mb-6">{mentor.bio}</p>
 
@@ -189,12 +194,11 @@ export function MentorProfilePage() {
                   e.preventDefault()
                   const message = requestMessage.trim()
                   if (!message || !mentor.isAvailable) {
-                    alert('Mentor is not currently accepting requests or message is empty')
+                    toast.error('Mentor is not currently accepting requests or message is empty')
                     return
                   }
-                  // In real app: API call to create mentorship request
-                  alert(
-                    'Mentorship request submitted successfully! The mentor will review your request within 5-7 business days.'
+                  toast.success(
+                    'Mentorship request submitted! The mentor will review your request within 5-7 business days.'
                   )
                   setShowRequestForm(false)
                   setRequestMessage('')

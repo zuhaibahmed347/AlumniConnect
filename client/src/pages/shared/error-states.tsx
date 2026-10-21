@@ -104,9 +104,9 @@ export function SessionExpiredPage() {
 /* ==================== Validation Error Component ==================== */
 export function ValidationError({ errors }: { errors: Record<string, string[]> }) {
   return (
-    <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-md">
-      <p className="text-sm font-medium text-red-600">Validation failed</p>
-      <ul className="mt-1 text-sm text-red-700">
+    <div className="bg-error/10 border-l-4 border-error p-4 mb-4 rounded-md">
+      <p className="text-sm font-medium text-error">Validation failed</p>
+      <ul className="mt-1 text-sm text-error/90">
         {Object.entries(errors).map(([field, messages]) => (
           <li key={field} className="list-disc pl-2">
             {field}: {messages[0]}
@@ -120,10 +120,10 @@ export function ValidationError({ errors }: { errors: Record<string, string[]> }
 /* ==================== API Error Component ==================== */
 export function ApiError({ error }: { error: { message: string; code?: string } }) {
   return (
-    <div className="bg-error/5 border-l-4 border-error p-4 mb-4 rounded-md">
+    <div className="bg-error/10 border-l-4 border-error p-4 mb-4 rounded-md">
       <p className="text-sm font-medium text-error">{error.message}</p>
       {error.code && (
-        <p className="text-xs text-error/70 mt-1">Code: {error.code}</p>
+        <p className="text-xs text-error/80 mt-1">Code: {error.code}</p>
       )}
     </div>
   )
@@ -132,9 +132,9 @@ export function ApiError({ error }: { error: { message: string; code?: string } 
 /* ==================== Network Error Component ==================== */
 export function NetworkError({ retry }: { retry: () => void }) {
   return (
-    <div className="bg-secondary/5 border-l-4 border-secondary p-4 mb-4 rounded-md">
-      <p className="text-sm font-medium">Network failure</p>
-      <p className="text-xs text-secondary/70 mt-1">Unable to connect to the server. Check your internet connection and try again.</p>
+    <div className="bg-secondary/10 border-l-4 border-secondary p-4 mb-4 rounded-md">
+      <p className="text-sm font-medium text-foreground">Network failure</p>
+      <p className="text-xs text-secondary mt-1">Unable to connect to the server. Check your internet connection and try again.</p>
       <Button
         variant="outline"
         size="sm"
@@ -166,8 +166,8 @@ export function EmptyState({
       <div className="h-16 w-16 rounded-md flex items-center justify-center mx-auto mb-4">
         {icon}
       </div>
-      <h3 className="text-xl font-medium mb-2">{title}</h3>
-      <p className="text-secondary/70 mb-6">{description}</p>
+      <h3 className="text-xl font-medium text-foreground mb-2">{title}</h3>
+      <p className="text-secondary mb-6">{description}</p>
       {buttonText && buttonOnClick && (
         <Button onClick={buttonOnClick}>{buttonText}</Button>
       )}
@@ -193,7 +193,7 @@ export function SkeletonLoader({
   return (
     <div
       className={cn(
-        'animate-pulse bg-secondary/50 rounded-md',
+        'animate-pulse bg-secondary/30 rounded-md',
         className,
       )}
       style={{ width: size.width, height: size.height }}
@@ -217,7 +217,7 @@ export function SkeletonText({
       className,
     )}>
       {Array.from({ length: lineCount }).map((_, i) => (
-        <div key={i} className="h-6 rounded-md bg-secondary/50 animate-pulse" />
+        <div key={i} className="h-6 rounded-md bg-secondary/30 animate-pulse" />
       ))}
     </div>
   )
@@ -232,7 +232,7 @@ export function SkeletonImage({
   return (
     <div
       className={cn(
-        'rounded-md bg-secondary/50 h-48 w-full animate-pulse',
+        'rounded-md bg-secondary/30 h-48 w-full animate-pulse',
         className,
       )}
     />
@@ -256,10 +256,10 @@ export function ConfirmationDialog({
   onCancel?: () => void
 }) {
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg p-8 w-full max-w-md shadow-xl">
-        <h2 className="text-xl font-bold mb-4">{title}</h2>
-        <p className="text-secondary/70 mb-6">{description}</p>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-card text-foreground border border-border rounded-lg p-8 w-full max-w-md shadow-xl">
+        <h2 className="text-xl font-bold text-foreground mb-4">{title}</h2>
+        <p className="text-secondary mb-6">{description}</p>
         <div className="flex gap-3">
           <Button
             variant="ghost"

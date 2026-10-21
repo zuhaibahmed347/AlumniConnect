@@ -1,4 +1,6 @@
 import { Button } from '@/components/ui/button'
+import { ThemeSwitcher } from '@/components/ui/theme-switcher'
+import { toast } from '@/lib/toast'
 import { Loader2, Calendar, Users } from 'lucide-react'
 import { Avatar } from '@/components/ui/avatar'
 import { useState, useEffect } from 'react'
@@ -71,38 +73,41 @@ export function MentorshipRelationshipsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-md">
+    <main className="min-h-screen bg-background text-foreground">
+      <header className="border-b border-border/80 bg-background/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold tracking-tight">Mentorship Relationships</h1>
             <Calendar className="h-5 w-5 text-secondary" />
           </div>
-          <Button variant="ghost" size="sm" onClick={() => alert('New mentorship request')}>
-            <Users className="h-4 w-4 mr-2" /> New Request
-          </Button>
+          <div className="flex items-center gap-2.5">
+            <ThemeSwitcher />
+            <Button variant="ghost" size="sm" onClick={() => toast.success('Mentorship request modal ready')}>
+              <Users className="h-4 w-4 mr-2" /> New Request
+            </Button>
+          </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <section className="bg-white rounded-lg p-4 mb-6">
+        <section className="bg-card text-foreground border border-border rounded-2xl p-5 mb-6 shadow-card">
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <p className="text-2xl font-bold">3</p>
-              <p className="text-secondary/80">Active</p>
+              <p className="text-2xl font-bold text-foreground">3</p>
+              <p className="text-secondary">Active</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">1</p>
-              <p className="text-secondary/80">Pending</p>
+              <p className="text-2xl font-bold text-foreground">1</p>
+              <p className="text-secondary">Pending</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">1</p>
-              <p className="text-secondary/80">Completed</p>
+              <p className="text-2xl font-bold text-foreground">1</p>
+              <p className="text-secondary">Completed</p>
             </div>
           </div>
         </section>
 
-        <section className="bg-white">
+        <section className="space-y-3">
           <div className="max-w-7xl mx-auto">
             <div className="overflow-x-auto">
               {loading && (
@@ -176,7 +181,7 @@ export function MentorshipRelationshipsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => alert('Accept mentorship request')}
+                          onClick={() => toast.success('Accepted mentorship request')}
                         >
                           Accept
                         </Button>
@@ -185,7 +190,7 @@ export function MentorshipRelationshipsPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => alert('Add meeting note')}
+                          onClick={() => toast.success('Session note saved')}
                         >
                           Note
                         </Button>
@@ -194,7 +199,7 @@ export function MentorshipRelationshipsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => alert('Cancel relationship')}
+                          onClick={() => toast.success('Mentorship status updated')}
                         >
                           Cancel
                         </Button>

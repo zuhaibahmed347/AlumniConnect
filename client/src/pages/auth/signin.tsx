@@ -1,5 +1,6 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { ThemeSwitcher } from '@/components/ui/theme-switcher'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -66,7 +67,10 @@ export function SignInPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+    <main className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeSwitcher />
+      </div>
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(13,110,91,0.08),transparent_50%),radial-gradient(circle_at_80%_80%,rgba(217,119,6,0.07),transparent_50%)]"
@@ -101,11 +105,11 @@ export function SignInPage() {
         {/* Sign In Form */}
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="bg-white rounded-2xl border border-border p-6 sm:p-8 shadow-card space-y-5"
+          className="bg-card text-foreground rounded-2xl border border-border p-6 sm:p-8 shadow-card space-y-5"
         >
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-xs font-semibold mb-2">
+            <label htmlFor="email" className="block text-xs font-semibold text-foreground mb-2">
               Institutional or Personal Email
             </label>
             <Input
@@ -124,7 +128,7 @@ export function SignInPage() {
           {/* Password */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label htmlFor="password" className="block text-xs font-semibold">
+              <label htmlFor="password" className="block text-xs font-semibold text-foreground">
                 Password
               </label>
               <Link

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 export interface StatCardProps {
@@ -19,15 +20,22 @@ export function StatCard({ title, value, icon, trend, hint }: StatCardProps) {
         : 'text-secondary'
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+    <motion.div
+      whileHover={{ y: -4, boxShadow: '0 16px 36px -8px rgb(9 20 34 / 0.11)' }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+      className="rounded-xl border border-border bg-card p-5 shadow-card"
+    >
       {icon && (
         <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
           {icon}
         </div>
       )}
-      <div className="text-2xl font-bold text-foreground">{value}</div>
-      <p className={cn('mt-1 text-sm', trendClass)}>{title}</p>
+      <div className="font-mono text-2xl font-bold text-foreground tabular-nums">
+        {value}
+      </div>
+      <p className={cn('mt-1 text-sm font-medium', trendClass)}>{title}</p>
       {hint && <p className="mt-1 text-xs text-secondary/70">{hint}</p>}
-    </div>
+    </motion.div>
   )
 }

@@ -1,9 +1,24 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, Loader2, UserPlus, MapPin, ArrowUpRight } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
-import { motion, type Variants } from 'framer-motion'
+import { ThemeSwitcher } from '@/components/ui/theme-switcher'
+import { GlobalSearchTrigger } from '@/components/ui/global-search-bar'
+import {
+  AlumniWorldMap,
+  type CountryAlumniRecord,
+} from '@/components/ui/alumni-world-map'
+import {
+  Search,
+  Loader2,
+  UserPlus,
+  MapPin,
+  ArrowUpRight,
+  Globe2,
+  X,
+} from 'lucide-react'
+import { useState, useEffect, type FormEvent } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { motion, AnimatePresence, type Variants } from 'framer-motion'
+import { toast } from '@/lib/toast'
 
 const initialFilters = {
   search: '',
@@ -52,52 +67,142 @@ const ALUMNI_DATA = [
     graduationYear: 2020,
     department: 'Computer Science',
     location: 'Karachi, Pakistan',
-    avatar: '/images/avatar.jpg',
+    country: 'Pakistan',
+    avatar: '/images/avatars/hassan.jpg',
     skills: ['TypeScript', 'React', 'Node.js'],
     connectionStatus: 'Connect',
   },
   {
     id: '2',
-    name: 'Saba Ahmed',
-    headline: 'Growth & Brand Lead · Creative Studio',
-    graduationYear: 2019,
+    name: 'Sanaullah Memon',
+    headline: 'Director of Payment Rail Product · Careem',
+    graduationYear: 2016,
     department: 'Business Administration',
-    location: 'Lahore, Pakistan',
-    avatar: '/images/avatar.jpg',
-    skills: ['Product Marketing', 'Growth', 'Analytics'],
+    location: 'Dubai, United Arab Emirates',
+    country: 'United Arab Emirates',
+    avatar: '/images/avatars/sana.jpg',
+    skills: ['Product Marketing', 'FinTech', 'Analytics'],
     connectionStatus: 'Connected',
   },
   {
     id: '3',
-    name: 'Usman Khan',
-    headline: 'Principal Data Scientist · DataInsights',
-    graduationYear: 2021,
+    name: 'Dr. Aamir Soomro',
+    headline: 'VP of AI Infrastructure · AI Innovations',
+    graduationYear: 2014,
     department: 'Computer Science',
-    location: 'Islamabad, Pakistan',
-    avatar: '/images/avatar.jpg',
-    skills: ['Python', 'Machine Learning', 'SQL'],
+    location: 'Munich, Germany',
+    country: 'Germany',
+    avatar: '/images/avatars/aamir.jpg',
+    skills: ['Python', 'Machine Learning', 'Kubernetes'],
     connectionStatus: 'Connect',
   },
   {
     id: '4',
-    name: 'Fatima Shah',
-    headline: 'VP People & Talent · HumaneCorp',
-    graduationYear: 2018,
-    department: 'Business Administration',
-    location: 'Karachi, Pakistan',
-    avatar: '/images/avatar.jpg',
-    skills: ['Executive Search', 'People Ops', 'Mentorship'],
+    name: 'Kamran Mahar',
+    headline: 'Managing Director, Cloud Security · HumaneCorp',
+    graduationYear: 2011,
+    department: 'Computer Science',
+    location: 'Riyadh, Saudi Arabia',
+    country: 'Saudi Arabia',
+    avatar: '/images/avatars/kamran.jpg',
+    skills: ['Cloud Security', 'Executive Search', 'Mentorship'],
     connectionStatus: 'Connected',
+  },
+  {
+    id: '5',
+    name: 'Nadia Talpur',
+    headline: 'Head of Design Engineering · Creative Studio',
+    graduationYear: 2018,
+    department: 'Computer Science',
+    location: 'London, United Kingdom',
+    country: 'United Kingdom',
+    avatar: '/images/avatars/nadia.jpg',
+    skills: ['React', 'Design Systems', 'TypeScript'],
+    connectionStatus: 'Connect',
+  },
+  {
+    id: '6',
+    name: 'Zainab Khuhro',
+    headline: 'Staff Applied AI Scientist · AI Innovations',
+    graduationYear: 2017,
+    department: 'Computer Science',
+    location: 'San Francisco, United States',
+    country: 'United States of America',
+    avatar: '/images/avatars/zainab.jpg',
+    skills: ['Python', 'Machine Learning', 'LLMs'],
+    connectionStatus: 'Connect',
+  },
+  {
+    id: '7',
+    name: 'Bilal Ahmed Qureshi',
+    headline: 'Chief Data Officer · DataInsights',
+    graduationYear: 2017,
+    department: 'Data Science',
+    location: 'Islamabad, Pakistan',
+    country: 'Pakistan',
+    avatar: '/images/avatars/bilal.jpg',
+    skills: ['Python', 'Machine Learning', 'SQL'],
+    connectionStatus: 'Connect',
+  },
+  {
+    id: '8',
+    name: 'Farhan Ali Bhutto',
+    headline: 'Partner, Enterprise Data Advisory · DataInsights',
+    graduationYear: 2015,
+    department: 'Business Administration',
+    location: 'Toronto, Canada',
+    country: 'Canada',
+    avatar: '/images/avatars/farhan.jpg',
+    skills: ['Analytics', 'Product Marketing', 'SQL'],
+    connectionStatus: 'Connected',
+  },
+  {
+    id: '9',
+    name: 'Ayesha Siddiqui',
+    headline: 'Principal Systems Architect · CloudScale',
+    graduationYear: 2019,
+    department: 'Computer Science',
+    location: 'Karachi, Pakistan',
+    country: 'Pakistan',
+    avatar: '/images/avatars/sana.jpg',
+    skills: ['TypeScript', 'Node.js', 'Kubernetes'],
+    connectionStatus: 'Connect',
+  },
+  {
+    id: '10',
+    name: 'Hina Soomro',
+    headline: 'Staff Power Systems Engineer · Siemens Energy',
+    graduationYear: 2017,
+    department: 'Electrical Engineering',
+    location: 'Munich, Germany',
+    country: 'Germany',
+    avatar: '/images/avatars/nadia.jpg',
+    skills: ['Python', 'Machine Learning', 'Analytics'],
+    connectionStatus: 'Connect',
   },
 ]
 
 export function AlumniDirectoryPage() {
-  const [filters, setFilters] = useState<typeof initialFilters>(initialFilters)
+  const [searchParams] = useSearchParams()
+  const initialQuery = searchParams.get('q') || ''
+  const [filters, setFilters] = useState<typeof initialFilters>({
+    ...initialFilters,
+    search: initialQuery,
+  })
   const [page, setPage] = useState(1)
   const [loading] = useState(false)
+  const [showWorldMap, setShowWorldMap] = useState(true)
+
+  useEffect(() => {
+    const qParam = searchParams.get('q')
+    if (qParam !== null) {
+      setFilters((prev) => ({ ...prev, search: qParam }))
+    }
+  }, [searchParams])
   const [connectedIds, setConnectedIds] = useState<Record<string, boolean>>({
     '2': true,
     '4': true,
+    '8': true,
   })
 
   const filteredAlumni = ALUMNI_DATA.filter((alum) => {
@@ -112,7 +217,8 @@ export function AlumniDirectoryPage() {
       !filters.graduationYear || alum.graduationYear === filters.graduationYear
     const matchLocation =
       !filters.location ||
-      alum.location.toLowerCase().includes(filters.location.toLowerCase())
+      alum.location.toLowerCase().includes(filters.location.toLowerCase()) ||
+      alum.country.toLowerCase().includes(filters.location.toLowerCase())
     const matchSkill =
       filters.skills.length === 0 ||
       filters.skills.some((s) => alum.skills.includes(s))
@@ -133,33 +239,61 @@ export function AlumniDirectoryPage() {
     }))
   }
 
+  const handleMapCountrySelect = (country: CountryAlumniRecord) => {
+    setFilters((prev) => ({
+      ...prev,
+      location:
+        prev.location === country.countryName ? undefined : country.countryName,
+    }))
+    toast.success(
+      `Inspecting ${country.displayName} (${country.alumniCount.toLocaleString()} verified alumni)`
+    )
+  }
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md">
         <div className="page-container py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <Link
               to="/"
-              className="text-xs font-mono uppercase tracking-wider text-primary hover:underline"
+              className="text-xs font-mono uppercase tracking-wider text-primary hover:underline shrink-0"
             >
-              AlumniConnect
+              Sukkur IBA Alumni
             </Link>
             <span aria-hidden="true" className="text-border">
               /
             </span>
-            <h1 className="font-display text-xl font-bold tracking-tight">
-              Alumni Directory
+            <h1 className="font-display text-lg sm:text-xl font-bold tracking-tight truncate">
+              Global Alumni Directory
             </h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowWorldMap((v) => !v)}
+              className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-stone transition-colors"
+            >
+              <Globe2 className="h-3.5 w-3.5 text-primary" />
+              {showWorldMap ? 'Hide 42-Country Map' : 'Show 42-Country Map'}
+            </button>
             <Link
               to="/dashboard"
-              className="text-xs font-medium text-secondary hover:text-foreground transition-colors"
+              className="hidden md:inline-flex text-xs font-medium text-secondary hover:text-foreground transition-colors px-2"
             >
               Dashboard
             </Link>
-            <Button variant="default" size="sm" className="px-3.5 py-2 h-auto">
+            <GlobalSearchTrigger compact />
+            <ThemeSwitcher />
+            <Button
+              variant="default"
+              size="sm"
+              className="px-3.5 py-2 h-auto"
+              onClick={() =>
+                toast.success('Invitation link copied to your clipboard.')
+              }
+            >
               <UserPlus className="h-3.5 w-3.5 mr-1.5" /> Invite Classmate
             </Button>
           </div>
@@ -167,14 +301,35 @@ export function AlumniDirectoryPage() {
       </header>
 
       <div className="page-container py-8 space-y-8">
+        {/* Collapsible D3.js Interactive 42-Country Distribution Map */}
+        <AnimatePresence initial={false}>
+          {showWorldMap && (
+            <motion.section
+              key="directory-world-map"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
+              <AlumniWorldMap
+                variant="adaptive"
+                onCountrySelect={handleMapCountrySelect}
+              />
+            </motion.section>
+          )}
+        </AnimatePresence>
+
         {/* Filters Section */}
-        <section className="rounded-2xl border border-border bg-white p-6 shadow-card">
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-card">
           <form
             onSubmit={onSubmit}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-end"
           >
             <div className="lg:col-span-4">
-              <label htmlFor="search" className="block text-xs font-semibold mb-1.5">
+              <label
+                htmlFor="search"
+                className="block text-xs font-semibold mb-1.5"
+              >
                 Search by name, skill, or faculty
               </label>
               <div className="relative">
@@ -186,7 +341,7 @@ export function AlumniDirectoryPage() {
                   onChange={(e) =>
                     setFilters({ ...filters, search: e.target.value })
                   }
-                  className="pl-9 h-9"
+                  className="pl-9 h-10"
                 />
               </div>
             </div>
@@ -201,7 +356,7 @@ export function AlumniDirectoryPage() {
               <Input
                 id="graduationYear"
                 type="number"
-                placeholder="e.g. 2020"
+                placeholder="e.g. 2018"
                 value={filters.graduationYear || ''}
                 onChange={(e) =>
                   setFilters({
@@ -211,33 +366,53 @@ export function AlumniDirectoryPage() {
                       : undefined,
                   })
                 }
-                className="h-9 font-mono tabular-nums"
+                className="h-10 font-mono tabular-nums"
               />
             </div>
 
             <div className="lg:col-span-3">
-              <label htmlFor="location" className="block text-xs font-semibold mb-1.5">
-                Chapter / City
+              <label
+                htmlFor="location"
+                className="block text-xs font-semibold mb-1.5"
+              >
+                Country / Chapter City
               </label>
-              <Input
-                id="location"
-                placeholder="e.g. Karachi, Lahore"
-                value={filters.location || ''}
-                onChange={(e) =>
-                  setFilters({ ...filters, location: e.target.value })
-                }
-                className="h-9"
-              />
+              <div className="relative">
+                <Input
+                  id="location"
+                  placeholder="e.g. Pakistan, Germany, Dubai"
+                  value={filters.location || ''}
+                  onChange={(e) =>
+                    setFilters({
+                      ...filters,
+                      location: e.target.value || undefined,
+                    })
+                  }
+                  className="h-10 pr-8"
+                />
+                {filters.location && (
+                  <button
+                    type="button"
+                    aria-label="Clear location filter"
+                    onClick={() =>
+                      setFilters({ ...filters, location: undefined })
+                    }
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-secondary hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="lg:col-span-3 flex gap-2">
-              <Button type="submit" className="flex-1 h-9">
+              <Button type="submit" className="flex-1 h-10">
                 Apply Filters
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                className="h-9 px-3"
+                className="h-10 px-3"
                 onClick={() => setFilters(initialFilters)}
               >
                 Reset
@@ -250,25 +425,30 @@ export function AlumniDirectoryPage() {
             <span className="text-xs font-medium text-secondary mr-1">
               Filter by expertise:
             </span>
-            {['TypeScript', 'React', 'Python', 'Machine Learning', 'Product Marketing'].map(
-              (skill) => {
-                const active = filters.skills.includes(skill)
-                return (
-                  <button
-                    key={skill}
-                    type="button"
-                    onClick={() => toggleSkill(skill)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
-                      active
-                        ? 'bg-primary text-white'
-                        : 'bg-stone text-secondary hover:text-foreground'
-                    }`}
-                  >
-                    {skill}
-                  </button>
-                )
-              },
-            )}
+            {[
+              'TypeScript',
+              'React',
+              'Python',
+              'Machine Learning',
+              'Product Marketing',
+              'Cloud Security',
+            ].map((skill) => {
+              const active = filters.skills.includes(skill)
+              return (
+                <button
+                  key={skill}
+                  type="button"
+                  onClick={() => toggleSkill(skill)}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                    active
+                      ? 'bg-primary text-white'
+                      : 'bg-stone text-secondary hover:text-foreground'
+                  }`}
+                >
+                  {skill}
+                </button>
+              )
+            })}
           </div>
         </section>
 
@@ -287,14 +467,19 @@ export function AlumniDirectoryPage() {
             )}
 
             {!loading && filteredAlumni.length === 0 && (
-              <div className="rounded-2xl border border-border bg-white p-12 text-center text-secondary">
+              <div className="rounded-2xl border border-border bg-card p-12 text-center text-secondary">
                 <p className="font-display text-lg font-semibold text-foreground mb-1">
-                  No alumni found matching your criteria
+                  No spotlight profiles in this sample match “
+                  {filters.location || filters.search}”
                 </p>
                 <p className="text-sm mb-4">
-                  Try clearing your search query or selecting a different cohort year.
+                  Clear the active filter to browse all featured Sukkur IBA
+                  scholars across chapters.
                 </p>
-                <Button variant="outline" onClick={() => setFilters(initialFilters)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setFilters(initialFilters)}
+                >
                   Reset Filters
                 </Button>
               </div>
@@ -306,8 +491,15 @@ export function AlumniDirectoryPage() {
                 return (
                   <motion.article
                     key={alumni.id}
+                    layout
                     variants={cardEntrance}
-                    className="group rounded-2xl border border-border bg-white p-6 flex flex-col justify-between hover:shadow-card-hover transition-all"
+                    whileHover={{
+                      y: -5,
+                      boxShadow: '0 16px 36px -8px rgb(9 20 34 / 0.11)',
+                    }}
+                    whileTap={{ scale: 0.99 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+                    className="group rounded-2xl border border-border bg-card p-6 flex flex-col justify-between transition-colors shadow-card"
                   >
                     <div>
                       <div className="flex items-start justify-between gap-3 mb-4">
@@ -332,9 +524,9 @@ export function AlumniDirectoryPage() {
                       {/* Clean unboxed metadata */}
                       <p className="text-xs text-secondary/80 flex items-center gap-1.5 mb-4">
                         <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
-                        <span>{alumni.location}</span>
+                        <span className="truncate">{alumni.location}</span>
                         <span aria-hidden="true">·</span>
-                        <span>{alumni.department}</span>
+                        <span className="truncate">{alumni.department}</span>
                       </p>
 
                       <p className="text-xs text-secondary font-mono">
@@ -358,7 +550,9 @@ export function AlumniDirectoryPage() {
                         }`}
                       >
                         {isConnected ? 'Connected ✓' : 'Request Introduction'}
-                        {!isConnected && <ArrowUpRight className="h-3.5 w-3.5" />}
+                        {!isConnected && (
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                        )}
                       </button>
                       <span className="text-[11px] font-mono text-secondary/70 tabular-nums">
                         Verified
@@ -372,7 +566,8 @@ export function AlumniDirectoryPage() {
             {!loading && filteredAlumni.length > 0 && (
               <div className="mt-8 flex justify-center items-center gap-2 text-xs font-mono text-secondary tabular-nums">
                 <span>
-                  Page {page} of {Math.max(1, Math.ceil(filteredAlumni.length / 10))}
+                  Page {page} of{' '}
+                  {Math.max(1, Math.ceil(filteredAlumni.length / 10))}
                 </span>
                 <Button
                   variant="outline"

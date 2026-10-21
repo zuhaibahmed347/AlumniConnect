@@ -1,0 +1,8 @@
+{
+  "name": "AlumniConnect · Sukkur IBA University",
+  "description": "AlumniConnect — the alumni networking platform for Sukkur IBA University graduates. Connect with alumni, find mentors, discover jobs, and join events.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

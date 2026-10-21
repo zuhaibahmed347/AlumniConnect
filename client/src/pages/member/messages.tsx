@@ -1,5 +1,6 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { ThemeSwitcher } from '@/components/ui/theme-switcher'
 import { Search, Loader2, UserPlus } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -86,39 +87,41 @@ export function MessagesPage() {
     .length
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-md">
+      <header className="border-b border-border/80 bg-background/90 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold tracking-tight">Messages</h1>
             <Search className="h-5 w-5 text-secondary" />
           </div>
-          <Button variant="ghost" size="sm">
-            <UserPlus className="h-4 w-4 mr-2" /> New Message
-          </Button>
+          <div className="flex items-center gap-2.5">
+            <ThemeSwitcher />
+            <Button variant="ghost" size="sm">
+              <UserPlus className="h-4 w-4 mr-2" /> New Message
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Search and Actions */}
-        <section className="mb-6 bg-white rounded-lg p-4">
+        <section className="mb-6 bg-card border border-border rounded-2xl p-4 shadow-card">
           <form
-            className="grid grid-cols-1 sm:grid-cols-5 gap-3"
+            className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-center"
             onSubmit={(e) => e.preventDefault()}
           >
-            <div>
+            <div className="sm:col-span-3">
               <Input
                 placeholder="Search conversations..."
                 value={search}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="rounded border border-border px-3 py-2"
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="sm:col-span-2 flex items-center gap-3">
               <Button variant="outline" size="sm">Mark All Read</Button>
-              <span className="text-secondary/80">
+              <span className="text-xs font-mono text-secondary">
                 {unreadCount} unread
               </span>
             </div>
@@ -126,7 +129,7 @@ export function MessagesPage() {
         </section>
 
         {/* Conversations List */}
-        <section className="bg-white">
+        <section className="space-y-2">
           <div className="max-w-7xl mx-auto">
             <div className="overflow-x-auto">
               <div className="space-y-2">

@@ -1,63 +1,142 @@
+import { useState } from 'react'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { ThemeSwitcher } from '@/components/ui/theme-switcher'
+import { GlobalSearchTrigger } from '@/components/ui/global-search-bar'
 import { Menu } from 'lucide-react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useMotionValueEvent,
+  useReducedMotion,
+} from 'framer-motion'
+
+const MEMBER_LINKS = [
+  { to: '/dashboard', label: 'Dashboard' },
+  { to: '/alumni', label: 'Directory' },
+  { to: '/jobs', label: 'Jobs' },
+  { to: '/events', label: 'Events' },
+  { to: '/mentorship', label: 'Mentorship' },
+] as const
 
 export function MainNav() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const prefersReducedMotion = useReducedMotion()
+  const { scrollY } = useScroll()
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    const nextScrolled = latest > 32
+    if (nextScrolled !== isScrolled) {
+      setIsScrolled(nextScrolled)
+    }
+  })
+
+  const backdropFilter = useTransform(
+    scrollY,
+    [0, 120],
+    ['blur(8px) saturate(125%)', 'blur(22px) saturate(190%)'],
+  )
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/80 bg-background/90 backdrop-blur-md">
-      <div className="page-container h-16 flex items-center justify-between gap-8">
+    <header className="sticky top-0 z-50 w-full pointer-events-none px-3 sm:px-6 lg:px-8 pt-2.5 sm:pt-3">
+      <motion.div
+        initial={false}
+        animate={{
+          maxWidth: isScrolled ? '1060px' : '1280px',
+          height: isScrolled ? 54 : 64,
+          y: isScrolled ? 2 : 0,
+          borderRadius: isScrolled ? 18 : 14,
+        }}
+        transition={
+          prefersReducedMotion
+            ? { duration: 0 }
+            : {
+                type: 'spring',
+                stiffness: 290,
+                damping: 30,
+                mass: 0.85,
+              }
+        }
+        style={{
+          backdropFilter,
+          WebkitBackdropFilter: backdropFilter,
+        }}
+        className={`pointer-events-auto relative mx-auto flex w-full items-center justify-between gap-4 sm:gap-8 px-4 sm:px-6 transition-colors duration-300 ${
+          isScrolled
+            ? 'bg-card/75 dark:bg-card/70 border border-border/90 ring-1 ring-white/25 dark:ring-white/10 shadow-[0_16px_40px_-12px_rgba(9,20,34,0.16)] dark:shadow-[0_20px_48px_-12px_rgba(0,0,0,0.65)]'
+            : 'bg-background/65 dark:bg-background/55 border border-border/55 ring-1 ring-white/15 dark:ring-white/5 shadow-sm'
+        }`}
+      >
+        {/* Top specular glass reflection */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/50 dark:via-white/20 to-transparent"
+        />
+
         {/* Zone 1: Brand Lockup */}
         <Link
           to="/"
-          className="flex items-center gap-2.5 text-lg font-display font-bold tracking-tight text-foreground whitespace-nowrap shrink-0"
+          className="flex items-center gap-2.5 font-display font-bold tracking-tight text-foreground whitespace-nowrap shrink-0"
         >
-          <img
+          <motion.img
+            animate={{ scale: isScrolled ? 0.9 : 1 }}
+            whileHover={{ rotate: -4, scale: 1.06 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 22 }}
             src="/images/university-logo.jpg"
             alt="Sukkur IBA University"
-            className="h-8 w-8 rounded-lg object-cover ring-1 ring-border"
+            className="h-8 w-8 rounded-lg object-cover ring-1 ring-border shadow-sm"
           />
-          <span>AlumniConnect</span>
+          <motion.span
+            animate={{ fontSize: isScrolled ? '1.02rem' : '1.125rem' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 26 }}
+          >
+            AlumniConnect
+          </motion.span>
         </Link>
 
         {/* Zone 2: Desktop Nav Links */}
-        <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-secondary">
-          <Link
-            to="/dashboard"
-            className="hover:text-foreground hover:underline underline-offset-8 decoration-primary/60 transition-colors whitespace-nowrap shrink-0"
-          >
-            Dashboard
-          </Link>
-          <Link
-            to="/alumni"
-            className="hover:text-foreground hover:underline underline-offset-8 decoration-primary/60 transition-colors whitespace-nowrap shrink-0"
-          >
-            Directory
-          </Link>
-          <Link
-            to="/jobs"
-            className="hover:text-foreground hover:underline underline-offset-8 decoration-primary/60 transition-colors whitespace-nowrap shrink-0"
-          >
-            Jobs
-          </Link>
-          <Link
-            to="/events"
-            className="hover:text-foreground hover:underline underline-offset-8 decoration-primary/60 transition-colors whitespace-nowrap shrink-0"
-          >
-            Events
-          </Link>
-          <Link
-            to="/mentorship"
-            className="hover:text-foreground hover:underline underline-offset-8 decoration-primary/60 transition-colors whitespace-nowrap shrink-0"
-          >
-            Mentorship
-          </Link>
+        <nav
+          aria-label="Member Navigation"
+          className="hidden md:flex items-center gap-6 lg:gap-7 text-sm font-medium text-secondary"
+        >
+          {MEMBER_LINKS.map((link) => {
+            const isActive = location.pathname === link.to
+            return (
+              <motion.div
+                key={link.to}
+                whileHover={{ y: -1.5 }}
+                transition={{ type: 'spring', stiffness: 340, damping: 24 }}
+              >
+                <Link
+                  to={link.to}
+                  className={`relative py-1 transition-colors whitespace-nowrap shrink-0 ${
+                    isActive
+                      ? 'text-foreground font-semibold'
+                      : 'text-secondary hover:text-foreground'
+                  }`}
+                >
+                  {link.label}
+                  {isActive && (
+                    <motion.span
+                      layoutId="memberNavActiveUnderline"
+                      transition={{ type: 'spring', stiffness: 360, damping: 28 }}
+                      className="absolute inset-x-0 -bottom-1 h-0.5 rounded-full bg-primary"
+                    />
+                  )}
+                </Link>
+              </motion.div>
+            )
+          })}
         </nav>
 
-        {/* Zone 3: User Menu & Mobile Toggle */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Zone 3: Global Search, Theme Switcher, User Menu & Mobile Toggle */}
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+          <GlobalSearchTrigger compact={isScrolled} />
+          <ThemeSwitcher />
           <Link to="/profile" aria-label="Your profile">
             <Avatar className="h-8 w-8 ring-1 ring-border">
               <AvatarImage src="/images/avatar.jpg" alt="Your profile" />
@@ -80,7 +159,7 @@ export function MainNav() {
             <Menu className="h-5 w-5" />
           </button>
         </div>
-      </div>
+      </motion.div>
     </header>
   )
 }

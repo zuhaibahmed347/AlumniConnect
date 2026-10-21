@@ -1,75 +1,83 @@
-import { Input } from '@/components/ui/input'
+import { Input, SelectField } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Calendar } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { ThemeSwitcher } from '@/components/ui/theme-switcher'
+import { Calendar, Search, MapPin, Users, ArrowLeft, Plus } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from '@/lib/toast'
 
 export function AdminEventAdministrationPage() {
   const navigate = useNavigate()
 
   const [events, setEvents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState<{ search: string; status: string }>({
+  const [filters, setFilters] = useState<{
+    search: string
+    status: string
+    format: string
+  }>({
     search: '',
-    status: '',
-})
+    status: 'ALL',
+    format: 'ALL',
+  })
 
   useEffect(() => {
     const mockEvents = [
       {
         id: '1',
-        title: 'Annual Alumni Reunion 2024',
-        slug: 'annual-alumni-reunion-2024',
+        title: 'Annual Sukkur IBA Grand Homecoming & Gala 2026',
+        slug: 'annual-alumni-reunion-2026',
         description:
           'Biggest alumni gathering of the year with keynotes, panels, and gala dinner.',
         shortDescription: 'Annual reunion with keynotes, panels, and gala dinner.',
         coverImageUrl: '/images/events/reunion.jpg',
-        startDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 45),
-        endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 45 + 1000 * 60 * 60 * 5),
+        startDate: new Date('2026-12-15T17:00:00'),
+        endDate: new Date('2026-12-17T22:00:00'),
         timezone: 'Asia/Karachi',
         location: 'Sukkur IBA University Main Campus',
         isVirtual: false,
         capacity: 500,
         status: 'PUBLISHED',
         organizer: 'AlumniConnect Team',
-        registeredCount: 234,
+        registeredCount: 342,
         totalCapacity: 500,
       },
       {
         id: '2',
-        title: 'Tech Career Fair 2024',
-        slug: 'tech-career-fair-2024',
+        title: 'Sukkur IBA Autumn Tech & FinTech Hiring Summit',
+        slug: 'tech-career-fair-2026',
         description:
-          '30+ tech companies hiring alumni. On-site interviews available.',
-        shortDescription: '30+ tech companies hiring alumni.',
+          '38+ partner companies hiring Sukkur IBA alumni. On-site interviews available.',
+        shortDescription: '38+ tech companies hiring verified alumni.',
         coverImageUrl: '/images/events/tech-career-fair.jpg',
-        startDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
-        endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 + 1000 * 60 * 60 * 6),
+        startDate: new Date('2027-01-14T10:00:00'),
+        endDate: new Date('2027-01-14T17:00:00'),
         timezone: 'Asia/Karachi',
-        location: 'Sukkur IBA University Auditorium',
+        location: 'Karachi Regional Chapter Convention Center',
         isVirtual: false,
-        capacity: 300,
+        capacity: 350,
         status: 'PUBLISHED',
-        organizer: 'Event Manager',
-        registeredCount: 189,
-        totalCapacity: 300,
+        organizer: 'Corporate Linkages Office',
+        registeredCount: 276,
+        totalCapacity: 350,
       },
       {
         id: '3',
-        title: 'Women in Tech Leadership Panel',
+        title: 'Women in Tech & Executive Fellows Roundtable',
         slug: 'women-in-tech-leadership-panel',
         description:
-          'Panel discussion with women tech leaders globally.',
+          'Panel discussion with Sukkur IBA alumnae tech leaders globally.',
         shortDescription: 'Panel discussion with women tech leaders.',
         coverImageUrl: '/images/events/women-in-tech.jpg',
-        startDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 15),
-        endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 15 + 1000 * 60 * 60 * 2),
-        timezone: 'UTC',
+        startDate: new Date('2027-02-04T15:00:00'),
+        endDate: new Date('2027-02-04T18:30:00'),
+        timezone: 'PKT',
+        location: 'Islamabad Chapter Hub & Global Stream',
         isVirtual: true,
         virtualUrl: 'https://meet.alumni-connect.local/women-in-tech',
         capacity: 200,
         status: 'PUBLISHED',
-        organizer: 'Event Manager',
+        organizer: 'Global Alumnae Council',
         registeredCount: 156,
         totalCapacity: 200,
       },
@@ -79,134 +87,193 @@ export function AdminEventAdministrationPage() {
     setLoading(false)
   }, [])
 
+  const filteredEvents = useMemo(() => {
+    const q = filters.search.trim().toLowerCase()
+    return events.filter((ev) => {
+      const matchesSearch =
+        !q ||
+        ev.title.toLowerCase().includes(q) ||
+        ev.shortDescription.toLowerCase().includes(q) ||
+        (ev.location || '').toLowerCase().includes(q)
+      const matchesStatus =
+        filters.status === 'ALL' || ev.status === filters.status
+      const matchesFormat =
+        filters.format === 'ALL' ||
+        (filters.format === 'VIRTUAL' && ev.isVirtual) ||
+        (filters.format === 'IN_PERSON' && !ev.isVirtual)
+      return matchesSearch && matchesStatus && matchesFormat
+    })
+  }, [events, filters])
+
   return (
-    <main className="min-h-screen bg-background">
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+    <main className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-40 border-b border-border/80 bg-background/85 backdrop-blur-md">
+        <div className="page-container h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold tracking-tight">Event Administration</h1>
-            <Calendar className="h-5 w-5 text-secondary" />
+            <Calendar className="h-5 w-5 text-primary" />
+            <h1 className="font-display text-xl font-bold tracking-tight">
+              Event Administration
+            </h1>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
-            ← Back to Command Center
-          </Button>
+          <div className="flex items-center gap-3">
+            <ThemeSwitcher />
+            <Button
+              variant="outline"
+              size="default"
+              onClick={() => navigate('/admin')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-1.5" />
+              Command Center
+            </Button>
+            <Button
+              variant="default"
+              size="default"
+              onClick={() =>
+                toast.success('New chapter event draft initialized.')
+              }
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              Create Event
+            </Button>
+          </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div>
-          <div className="bg-white rounded-lg p-4 mb-6">
-            <form className="grid grid-cols-1 sm:grid-cols-6 gap-3">
-              <div>
+      <div className="page-container py-10 space-y-8">
+        {/* Filter Bar with Modern Margins & High-Visibility Dropdowns */}
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-card">
+          <form
+            onSubmit={(e) => e.preventDefault()}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-5 items-end"
+          >
+            <div className="lg:col-span-5 flex flex-col gap-1.5">
+              <label
+                htmlFor="admin-event-search"
+                className="text-xs font-semibold tracking-wide text-secondary"
+              >
+                Search Events
+              </label>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary" />
                 <Input
-                  placeholder="Search events..."
+                  id="admin-event-search"
+                  placeholder="Search by event title, venue, or organizer..."
                   value={filters.search}
                   onChange={(e) =>
                     setFilters({ ...filters, search: e.target.value })
                   }
-                  className="rounded border border-border px-3 py-2"
+                  className="pl-10"
                 />
               </div>
-              <div>
-                <select
-                  value={filters.status || ''}
-                  onChange={(e) =>
-                    setFilters({
-                      ...filters,
-                      status: (e.target.value || undefined) as string
-                    })
-                  }
-                  className="rounded border border-border px-3 py-2"
-                >
-                  <option value="">All Statuses</option>
-                  <option>DRAFT</option>
-                  <option>PUBLISHED</option>
-                  <option>CANCELLED</option>
-                  <option>COMPLETED</option>
-                </select>
-              </div>
-              <div>
-                <Button type="submit" className="sm:col-auto w-auto">
-                  Apply Filters
-                </Button>
-              </div>
-            </form>
-          </div>
+            </div>
 
-          <div className="bg-white">
-            <div className="max-w-7xl mx-auto">
-              <div className="overflow-x-auto">
-                <div className="space-y-2">
-                  {events.map((event) => (
-                    <div
-                      key={event.id}
-                      className="group rounded-lg border bg-card p-4 hover:bg-card/80 transition-colors cursor-pointer"
-                    >
-                      <div className="flex items-start gap-3">
-                        {event.coverImageUrl && (
-                          <div className="w-24 h-14 rounded-md overflow-hidden flex-shrink-0">
-                            <img
-                              src={event.coverImageUrl}
-                              alt={event.title}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                        {!event.coverImageUrl && (
-                          <div className="w-24 h-14 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <svg
-                              className="h-6 w-6 text-primary"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 19v6a2 2 0 002 2H9a2 2 0 002-2zM5 13l7 7-7 7"
-                              />
-                            </svg>
-                          </div>
-                        )}
+            <SelectField
+              label="Publication Status"
+              wrapperClassName="lg:col-span-3"
+              value={filters.status}
+              onChange={(e) =>
+                setFilters({ ...filters, status: e.target.value })
+              }
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="PUBLISHED">Published (Live)</option>
+              <option value="DRAFT">Draft</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="CANCELLED">Cancelled</option>
+            </SelectField>
 
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{event.title}</p>
-                          <p className="text-xs text-secondary/70 truncate">
-                            {event.shortDescription || ''}
-                          </p>
-                        </div>
+            <SelectField
+              label="Venue Format"
+              wrapperClassName="lg:col-span-2"
+              value={filters.format}
+              onChange={(e) =>
+                setFilters({ ...filters, format: e.target.value })
+              }
+            >
+              <option value="ALL">All Formats</option>
+              <option value="IN_PERSON">In-Person Venue</option>
+              <option value="VIRTUAL">Virtual / Hybrid</option>
+            </SelectField>
 
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className='text-secondary/70'>
-                            {event.status}
-                          </span>
-                        </div>
-                      </div>
+            <div className="lg:col-span-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={() =>
+                  setFilters({ search: '', status: 'ALL', format: 'ALL' })
+                }
+                className="w-full h-11"
+              >
+                Reset Filters
+              </Button>
+            </div>
+          </form>
+        </section>
 
-                      <div className="mt-3 pt-3 border-t border-border/10 text-xs text-secondary">
-                        <p>
-                          {new Date(event.startDate).toLocaleDateString()} ·
-                          {event.location}
-                        </p>
-                        <p>
-                          Registered: {event.registeredCount}/{event.totalCapacity}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-
-                  {loading || events.length === 0 && (
-                    <div className="min-h-[200px] flex flex-col items-center justify-center py-8 text-secondary">
-                      <Calendar className="h-8 w-8 mb-3 opacity-50" />
-                      <p>No events found matching your criteria</p>
-                    </div>
-                  )}
+        {/* Events List */}
+        <section className="space-y-4">
+          {filteredEvents.map((event) => (
+            <div
+              key={event.id}
+              onClick={() => navigate(`/events/${event.id}`)}
+              className="group rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-card hover:border-primary/40 transition-colors cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-5"
+            >
+              <div className="flex items-start sm:items-center gap-4 min-w-0">
+                {event.coverImageUrl && (
+                  <img
+                    src={event.coverImageUrl}
+                    alt={event.title}
+                    className="w-28 h-20 rounded-xl object-cover border border-border shrink-0"
+                  />
+                )}
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-secondary mb-1 tabular-nums">
+                    <span className="text-primary font-semibold">
+                      {event.status}
+                    </span>
+                    <span aria-hidden="true">·</span>
+                    <span>
+                      {new Date(event.startDate).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </span>
+                    <span aria-hidden="true">·</span>
+                    <span>{event.organizer}</span>
+                  </div>
+                  <h2 className="font-display text-lg font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                    {event.title}
+                  </h2>
+                  <p className="text-sm text-secondary truncate mt-0.5">
+                    {event.shortDescription}
+                  </p>
                 </div>
               </div>
+
+              <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-border text-xs font-mono text-secondary tabular-nums">
+                <span className="flex items-center gap-1.5 text-foreground font-semibold">
+                  <Users className="h-3.5 w-3.5 text-primary" />
+                  {event.registeredCount} / {event.totalCapacity} Registered
+                </span>
+                <span className="flex items-center gap-1 text-secondary">
+                  <MapPin className="h-3.5 w-3.5 text-primary" />
+                  {event.location || 'Virtual Stream'}
+                </span>
+              </div>
             </div>
-          </div>
-        </div>
+          ))}
+
+          {!loading && filteredEvents.length === 0 && (
+            <div className="rounded-2xl border border-border bg-card p-12 text-center text-secondary">
+              <Calendar className="h-8 w-8 mx-auto mb-3 opacity-50" />
+              <p className="text-sm font-medium">
+                No events found matching your filter criteria.
+              </p>
+            </div>
+          )}
+        </section>
       </div>
     </main>
   )

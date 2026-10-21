@@ -59,30 +59,30 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+    <main className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8 flex items-center justify-center">
       <div className="max-w-md mx-auto w-full space-y-8">
         {/* Brand Header */}
         <div className="text-center">
           <img
             src="/images/university-logo.jpg"
             alt="Sukkur IBA University"
-            className="h-12 w-12 rounded-lg object-cover mx-auto mb-4"
+            className="h-12 w-12 rounded-lg object-cover mx-auto mb-4 ring-1 ring-border"
           />
-          <h2 className="text-2xl font-bold tracking-tight mb-2">AlumniConnect</h2>
+          <h2 className="text-2xl font-bold tracking-tight mb-2 text-foreground">AlumniConnect</h2>
           <p className="text-secondary">Reset your password</p>
         </div>
 
         {/* Reset Password Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg p-6 shadow-sm space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-card text-foreground border border-border rounded-2xl p-6 shadow-card space-y-6">
           {!token && (
-            <p className="text-sm text-red-600">
+            <p className="text-sm text-error">
               This reset link is missing its token. Please open the link from your email again.
             </p>
           )}
 
           {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
               New Password
             </label>
             <div className="relative">

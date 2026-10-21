@@ -1,14 +1,14 @@
 import { CheckCircle, Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { ThemeSwitcher } from '@/components/ui/theme-switcher'
+import { toast } from '@/lib/toast'
 
 export function NotificationsPage() {
-
   const [notifications, setNotifications] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [markAllLoading, setMarkAllLoading] = useState(false)
 
   useEffect(() => {
-    // In a real app, this would fetch notifications from the API
     const mockNotifications = [
       {
         id: '1',
@@ -16,7 +16,7 @@ export function NotificationsPage() {
         title: 'New Message',
         message: 'Ahmed Hassan: Hey! How are you?',
         isRead: false,
-        createdAt: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
+        createdAt: new Date(Date.now() - 1000 * 60 * 5),
       },
       {
         id: '2',
@@ -24,7 +24,7 @@ export function NotificationsPage() {
         title: 'Event Registration',
         message: 'You are registered for the Alumni Reunion',
         isRead: true,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
       },
       {
         id: '3',
@@ -32,7 +32,7 @@ export function NotificationsPage() {
         title: 'Mentorship Request',
         message: 'New mentorship request received',
         isRead: false,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3),
       },
       {
         id: '4',
@@ -40,7 +40,7 @@ export function NotificationsPage() {
         title: 'Job Application',
         message: 'New job posting matches your skills',
         isRead: false,
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8), // 8 hours ago
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8),
       },
     ]
 
@@ -48,9 +48,7 @@ export function NotificationsPage() {
     setLoading(false)
   }, [])
 
-  const [unreadCount, setUnreadCount] = useState(
-    notifications.filter((n) => !n.isRead).length
-  )
+  const unreadCount = notifications.filter((n) => !n.isRead).length
 
   const markAsRead = async (id: string) => {
     setNotifications(
@@ -58,7 +56,6 @@ export function NotificationsPage() {
         n.id === id ? { ...n, isRead: true, readAt: new Date() } : n
       )
     )
-    setUnreadCount(prev => Math.max(0, prev - 1))
   }
 
   const markAllAsRead = async () => {
@@ -66,30 +63,32 @@ export function NotificationsPage() {
     setNotifications(
       notifications.map((n) => ({ ...n, isRead: true, readAt: new Date() }))
     )
-    setUnreadCount(0)
     setMarkAllLoading(false)
   }
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-background p-8">
+      <main className="min-h-screen bg-background text-foreground p-8">
         <div className="min-h-[200px] flex flex-col items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 mx-auto mb-3" />
-          <p>Loading notifications...</p>
+          <Loader2 className="h-6 w-6 mx-auto mb-3 animate-spin text-primary" />
+          <p className="text-secondary">Loading notifications...</p>
         </div>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold tracking-tight">Notifications</h1>
-          <span className="text-sm text-secondary">
-            {unreadCount} {unreadCount === 1 ? 'unread' : 'unread'}
-          </span>
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Notifications</h1>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-secondary">
+              {unreadCount} unread
+            </span>
+            <ThemeSwitcher />
+          </div>
         </div>
       </header>
 
@@ -99,12 +98,12 @@ export function NotificationsPage() {
         <section className="mb-6">
           <div className="flex border-b border-border/50">
             <button
-              className="px-4 py-2 text-sm font-medium text-secondary hover:text-primary transition-colors border-b-2 border-primary"
+              className="px-4 py-2 text-sm font-semibold text-foreground border-b-2 border-primary dark:border-accent"
             >
               All
             </button>
             <button
-              className="px-4 py-2 text-sm font-medium text-secondary hover:text-primary transition-colors border-b-2 border-transparent"
+              className="px-4 py-2 text-sm font-medium text-secondary hover:text-foreground transition-colors border-b-2 border-transparent"
             >
               Unread
             </button>
@@ -113,13 +112,6 @@ export function NotificationsPage() {
 
         {/* Notifications List */}
         <section className="space-y-3 max-h-96 overflow-y-auto">
-          {loading && (
-            <div className="min-h-[200px] flex flex-col items-center justify-center py-8 text-secondary">
-              <Loader2 className="h-6 w-6 mx-auto mb-3" />
-              <p>Loading notifications...</p>
-            </div>
-          )}
-
           {notifications.length === 0 && !loading && (
             <div className="min-h-[200px] flex flex-col items-center justify-center py-8 text-secondary text-center">
               <svg className="h-8 w-8 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,46 +124,49 @@ export function NotificationsPage() {
           {notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`flex items-start gap-3 py-3 rounded-lg ${
-                notification.isRead ? 'bg-primary/5' : 'bg-primary/10'
-              } hover:${
+              className={`relative flex items-start gap-3 p-4 rounded-lg border transition-colors cursor-pointer ${
                 notification.isRead
-                  ? 'bg-primary/10'
-                  : 'bg-primary/20'
-              } transition-colors cursor-pointer`}
+                  ? 'bg-card border-border hover:bg-stone/50'
+                  : 'bg-primary/10 border-primary/30 hover:bg-primary/15'
+              }`}
               onClick={() => {
-                // In real app, navigate to related resource
-                window.alert(`Navigate to: ${notification.title}`)
+                toast({
+                  title: notification.title,
+                  description: notification.message,
+                  variant: 'default',
+                })
               }}
             >
-              <div className="w-2 h-2 rounded-full ${
-                notification.isRead ? 'bg-secondary' : 'bg-primary'
-              } flex-shrink-0 mt-1.5" />
+              <div
+                className={`w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1.5 ${
+                  notification.isRead ? 'bg-secondary/50' : 'bg-accent'
+                }`}
+              />
 
-              <div className="flex-1 min-w-0">
-                <p className={`font-medium ${
-                  notification.isRead ? 'text-primary' : 'font-semibold text-primary'
-                }`}>
+              <div className="flex-1 min-w-0 pr-8">
+                <p
+                  className={`text-sm ${
+                    notification.isRead
+                      ? 'font-medium text-foreground/90'
+                      : 'font-semibold text-foreground'
+                  }`}
+                >
                   {notification.title}
                 </p>
-                <p className="text-xs text-secondary/80 mt-0.5">
+                <p className="text-xs text-secondary mt-0.5">
                   {notification.message}
                 </p>
               </div>
 
-              {!notification.isRead && (
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
-              )}
-
               <button
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-primary/30 hover:text-primary p-1 rounded"
+                className="text-secondary hover:text-foreground p-1.5 rounded transition-colors"
                 aria-label="Mark as read"
                 onClick={(e) => {
                   e.stopPropagation()
                   markAsRead(notification.id)
                 }}
               >
-                <CheckCircle className="h-3 w-3" />
+                <CheckCircle className="h-4 w-4" />
               </button>
             </div>
           ))}
@@ -180,7 +175,7 @@ export function NotificationsPage() {
         {/* Action Buttons */}
         <section className="mt-6 flex gap-2">
           <button
-            className="flex-1 py-2 rounded text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+            className="flex-1 py-2.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground hover:bg-stone transition-colors"
             onClick={markAllAsRead}
             disabled={markAllLoading}
           >
@@ -188,7 +183,7 @@ export function NotificationsPage() {
           </button>
           <a
             href="/settings#notifications"
-            className="flex-1 py-2 rounded text-sm font-medium text-secondary hover:text-primary transition-colors underline"
+            className="flex-1 py-2.5 text-center rounded-lg text-sm font-medium text-secondary hover:text-foreground transition-colors underline"
           >
             Notification Preferences
           </a>

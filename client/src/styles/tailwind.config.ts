@@ -1,46 +1,56 @@
 import type { Config } from 'tailwindcss'
 
 /** AlumniConnect design system — Sukkur IBA University.
- *  Palette: Warm Alabaster Ivory, Midnight Obsidian, Meridian Emerald & Burnished Gold.
- *  Typography: Fraunces (Display), Plus Jakarta Sans / Manrope (Body), JetBrains Mono (Tabular Data).
+ *  Palette: Warm Alabaster Ivory (Light) & Midnight Obsidian (Dark),
+ *  paired with Meridian Emerald & Burnished Gold.
+ *  All core surfaces and text tokens reference CSS RGB variables so theme
+ *  switching and Tailwind alpha modifiers (`bg-background/90`, `border-border/80`)
+ *  update seamlessly.
  */
 
 export default {
+  darkMode: ['class'],
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
-        // 60% Dominant neutral canvas & 30% structural surfaces
-        background: '#FAF8F5',
-        foreground: '#0D1821',
-        card: '#FFFFFF',
-        'card-foreground': '#0D1821',
-        stone: '#F2EFE9',
+        // 60% Dominant neutral canvas & 30% structural surfaces via CSS variables
+        background: 'rgb(var(--color-background) / <alpha-value>)',
+        foreground: 'rgb(var(--color-foreground) / <alpha-value>)',
+        card: {
+          DEFAULT: 'rgb(var(--color-card) / <alpha-value>)',
+          foreground: 'rgb(var(--color-card-foreground) / <alpha-value>)',
+        },
+        popover: {
+          DEFAULT: 'rgb(var(--color-card) / <alpha-value>)',
+          foreground: 'rgb(var(--color-card-foreground) / <alpha-value>)',
+        },
+        stone: 'rgb(var(--color-stone) / <alpha-value>)',
         obsidian: '#091422',
         'obsidian-light': '#102238',
         // 10% High-intent brand palette
         primary: {
-          DEFAULT: '#0D6E5B',
-          foreground: '#FFFFFF',
+          DEFAULT: 'rgb(var(--color-primary) / <alpha-value>)',
+          foreground: 'rgb(var(--color-primary-foreground) / <alpha-value>)',
         },
         secondary: {
-          DEFAULT: '#4B5868',
-          foreground: '#FFFFFF',
+          DEFAULT: 'rgb(var(--color-secondary) / <alpha-value>)',
+          foreground: 'rgb(var(--color-secondary-foreground) / <alpha-value>)',
         },
-        violet: '#D97706',
+        violet: 'rgb(var(--color-gold) / <alpha-value>)',
         gold: {
-          DEFAULT: '#D97706',
+          DEFAULT: 'rgb(var(--color-gold) / <alpha-value>)',
           bright: '#F59E0B',
           soft: '#FEF3C7',
         },
         emerald: {
-          DEFAULT: '#0D6E5B',
+          DEFAULT: 'rgb(var(--color-primary) / <alpha-value>)',
           bright: '#10B981',
           soft: '#E6F4F1',
         },
         accent: {
-          DEFAULT: '#E6F4F1',
-          foreground: '#0D6E5B',
+          DEFAULT: 'rgb(var(--color-accent) / <alpha-value>)',
+          foreground: 'rgb(var(--color-accent-foreground) / <alpha-value>)',
         },
         navy: '#091422',
         cyan: '#2DD4BF',
@@ -48,18 +58,22 @@ export default {
         success: '#0F766E',
         warning: '#B45309',
         error: '#B91C1C',
+        destructive: {
+          DEFAULT: 'rgb(var(--color-destructive) / <alpha-value>)',
+          foreground: '#FFFFFF',
+        },
         // Utilities
         muted: {
-          DEFAULT: '#F2EFE9',
-          foreground: '#4B5868',
+          DEFAULT: 'rgb(var(--color-muted) / <alpha-value>)',
+          foreground: 'rgb(var(--color-muted-foreground) / <alpha-value>)',
         },
         sidebar: {
           DEFAULT: '#091422',
           foreground: '#FAF8F5',
         },
-        border: '#E3DFD5',
-        input: '#E3DFD5',
-        ring: '#0D6E5B',
+        border: 'rgb(var(--color-border) / <alpha-value>)',
+        input: 'rgb(var(--color-input) / <alpha-value>)',
+        ring: 'rgb(var(--color-ring) / <alpha-value>)',
       },
       fontFamily: {
         sans: [
@@ -96,8 +110,8 @@ export default {
         ],
       },
       boxShadow: {
-        card: '0 2px 6px -1px rgb(9 20 34 / 0.05), 0 1px 3px -1px rgb(9 20 34 / 0.04)',
-        'card-hover': '0 16px 36px -8px rgb(9 20 34 / 0.11), 0 4px 10px -2px rgb(9 20 34 / 0.05)',
+        card: 'var(--shadow-card)',
+        'card-hover': 'var(--shadow-card-hover)',
         glow: '0 0 24px rgba(13, 110, 91, 0.28)',
         'gold-glow': '0 0 24px rgba(245, 158, 11, 0.25)',
       },

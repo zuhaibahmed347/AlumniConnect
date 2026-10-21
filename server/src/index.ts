@@ -23,6 +23,7 @@ import messageRoutes from './routes/messages'
 import notificationRoutes from './routes/notifications'
 import announcementRoutes from './routes/announcements'
 import adminRoutes from './routes/admin'
+import campusNewsRoutes from './routes/campusNews'
 
 const app = express()
 
@@ -42,6 +43,7 @@ app.get('/api/health', asyncHandler(async (req, res) => {
 }))
 
 app.use('/api/auth', authRoutes)
+app.use('/api/campus-news', campusNewsRoutes)
 
 app.use('/api/users', authenticate, userRoutes)
 app.use('/api/profiles', authenticate, profileRoutes)

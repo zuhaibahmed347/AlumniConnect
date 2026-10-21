@@ -1,5 +1,6 @@
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { ThemeSwitcher } from '@/components/ui/theme-switcher'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, Variants } from 'framer-motion'
@@ -62,10 +63,10 @@ export function ProfilePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-background p-8">
+      <main className="min-h-screen bg-background text-foreground p-8">
         <div className="max-w-2xl mx-auto text-center">
           <div className="loader" />
-          <p>Loading profile...</p>
+          <p className="text-secondary">Loading profile...</p>
         </div>
       </main>
     )
@@ -85,7 +86,7 @@ export function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -95,103 +96,102 @@ export function ProfilePage() {
               <AvatarFallback>{user?.name?.substring(0, 2) || 'UA'}</AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-xl font-bold">{user?.name}</h1>
-              <p className="text-sm text-secondary/80">{user?.email}</p>
+              <h1 className="text-xl font-bold text-foreground">{user?.name}</h1>
+              <p className="text-sm text-secondary">{user?.email}</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/settings')}>
-            ← Back
-          </Button>
+          <div className="flex items-center gap-3">
+            <ThemeSwitcher />
+            <Button variant="ghost" size="sm" onClick={() => navigate('/settings')}>
+              ← Back
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          {/* Profile Summary Card */}
-          <motion.div
-            className="bg-white rounded-lg p-6 mb-8"
-            variants={profileEntrance}
-            initial="hidden"
-            animate="visible"
-          >
-            <h2 className="text-lg font-medium mb-3">Profile Information</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-secondary/80 text-xs mb-1">Name</p>
-                <p className="font-medium">{user?.name}</p>
-              </div>
-              <div>
-                <p className="text-secondary/80 text-xs mb-1">Email</p>
-                <p className="font-medium text-primary">{user?.email}</p>
-              </div>
-              <div>
-                <p className="text-secondary/80 text-xs mb-1">Role</p>
-                <p className="font-medium">{user?.role}</p>
-              </div>
-              <div>
-                <p className="text-secondary/80 text-xs mb-1">Status</p>
-                <p
-                  className={
-                    user?.status === 'ACTIVE'
-                      ? 'text-success'
-                      : 'text-error'
-                  }
-                >
-                  {user?.status}
-                </p>
-              </div>
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        {/* Profile Summary Card */}
+        <motion.div
+          className="bg-card border border-border rounded-lg p-6 mb-8 shadow-sm"
+          variants={profileEntrance}
+          initial="hidden"
+          animate="visible"
+        >
+          <h2 className="text-lg font-semibold text-foreground mb-3">Profile Information</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-secondary text-xs mb-1">Name</p>
+              <p className="font-medium text-foreground">{user?.name}</p>
             </div>
-          </motion.div>
-
-          {/* Education Section */}
-          <motion.div
-            className="bg-white rounded-lg p-6 mb-8"
-            transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-          >
-            <h2 className="text-lg font-medium mb-3">Education</h2>
-            {user?.educations.map((edu: {
-              id: string
-              institution: string
-              degree: string
-              fieldOfStudy: string
-              startYear: number
-              endYear: number
-              isCurrent?: boolean
-            }) => (
-              <div
-                key={edu.id}
-                className="mb-3 p-3 rounded-lg bg-primary/5 border-primary/20"
-                style={{ transitionDelay: '0.1s' }}
+            <div>
+              <p className="text-secondary text-xs mb-1">Email</p>
+              <p className="font-medium text-primary dark:text-accent">{user?.email}</p>
+            </div>
+            <div>
+              <p className="text-secondary text-xs mb-1">Role</p>
+              <p className="font-medium text-foreground">{user?.role}</p>
+            </div>
+            <div>
+              <p className="text-secondary text-xs mb-1">Status</p>
+              <p
+                className={
+                  user?.status === 'ACTIVE'
+                    ? 'text-success font-medium'
+                    : 'text-error font-medium'
+                }
               >
-                <p className="font-medium">{edu.institution}</p>
-                <p className="text-xs text-secondary/70">
-                  {edu.degree} in {edu.fieldOfStudy} ({edu.startYear}-{edu.endYear})
-                </p>
-              </div>
-            ))}
+                {user?.status}
+              </p>
+            </div>
+          </div>
+        </motion.div>
 
-            {user?.experiences.map((exp: {
-              id: string
-              title: string
-              company: string
-              location: string
-              employmentType: string
-            }) => (
-              <div
-                key={exp.id}
-                className="mt-4 pt-3 border-t border-primary/20"
-                style={{ transitionDelay: '0.15s' }}
-              >
-                <p className="font-medium">{exp.title} at {exp.company}</p>
-                <p className="text-xs text-secondary/70">
-                  {exp.location} · {exp.employmentType}
-                </p>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </main>
+        {/* Education Section */}
+        <motion.div
+          className="bg-card border border-border rounded-lg p-6 mb-8 shadow-sm"
+          transition={{ type: 'spring', stiffness: 200, damping: 25 }}
+        >
+          <h2 className="text-lg font-semibold text-foreground mb-3">Education</h2>
+          {user?.educations.map((edu: {
+            id: string
+            institution: string
+            degree: string
+            fieldOfStudy: string
+            startYear: number
+            endYear: number
+            isCurrent?: boolean
+          }) => (
+            <div
+              key={edu.id}
+              className="mb-3 p-3 rounded-lg bg-primary/10 border border-primary/20"
+            >
+              <p className="font-medium text-foreground">{edu.institution}</p>
+              <p className="text-xs text-secondary mt-0.5">
+                {edu.degree} in {edu.fieldOfStudy} ({edu.startYear}-{edu.endYear})
+              </p>
+            </div>
+          ))}
+
+          {user?.experiences.map((exp: {
+            id: string
+            title: string
+            company: string
+            location: string
+            employmentType: string
+          }) => (
+            <div
+              key={exp.id}
+              className="mt-4 pt-3 border-t border-border"
+            >
+              <p className="font-medium text-foreground">{exp.title} at {exp.company}</p>
+              <p className="text-xs text-secondary mt-0.5">
+                {exp.location} · {exp.employmentType}
+              </p>
+            </div>
+          ))}
+        </motion.div>
+      </div>
     </main>
   )
 }

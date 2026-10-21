@@ -7,11 +7,34 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root,
+  [data-theme="light"] {
     color-scheme: light;
     --font-sans: 'Plus Jakarta Sans', 'Manrope Variable', 'Manrope', 'Inter Variable', 'Inter', system-ui, sans-serif;
     --font-heading: 'Fraunces', 'Plus Jakarta Sans', 'Manrope Variable', Georgia, serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+    /* RGB channel triplets for Tailwind <alpha-value> utilities */
+    --color-background: 250 248 245;        /* #FAF8F5 Warm Alabaster Ivory */
+    --color-foreground: 13 24 33;           /* #0D1821 Deep Ink */
+    --color-card: 255 255 255;              /* #FFFFFF Crisp Paper Card */
+    --color-card-foreground: 13 24 33;      /* #0D1821 */
+    --color-stone: 242 239 233;             /* #F2EFE9 Warm Sand / Secondary Surface */
+    --color-primary: 13 110 91;             /* #0D6E5B Meridian Emerald */
+    --color-primary-foreground: 255 255 255;/* #FFFFFF */
+    --color-secondary: 71 85 105;           /* #475569 High-Contrast Slate Text */
+    --color-secondary-foreground: 255 255 255;
+    --color-gold: 217 119 6;                /* #D97706 Burnished Amber Gold */
+    --color-accent: 230 244 241;            /* #E6F4F1 Soft Emerald Tint */
+    --color-accent-foreground: 13 110 91;   /* #0D6E5B */
+    --color-muted: 242 239 233;             /* #F2EFE9 */
+    --color-muted-foreground: 71 85 105;    /* #475569 */
+    --color-destructive: 185 28 28;         /* #B91C1C */
+    --color-border: 218 213 203;            /* #DAD5CB Warm Defined Hairline */
+    --color-input: 218 213 203;             /* #DAD5CB */
+    --color-ring: 13 110 91;                /* #0D6E5B */
+
+    /* Standard semantic CSS variables */
     --background: oklch(0.982 0.006 85);
     --foreground: oklch(0.19 0.02 240);
     --card: oklch(1 0 0);
@@ -44,6 +67,57 @@
     --sidebar-accent-foreground: oklch(0.98 0.006 85);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.47 0.095 172);
+
+    --shadow-card: 0 2px 6px -1px rgb(9 20 34 / 0.05), 0 1px 3px -1px rgb(9 20 34 / 0.04);
+    --shadow-card-hover: 0 16px 36px -8px rgb(9 20 34 / 0.11), 0 4px 10px -2px rgb(9 20 34 / 0.05);
+  }
+
+  .dark,
+  [data-theme="dark"] {
+    color-scheme: dark;
+
+    /* RGB channel triplets for Midnight Obsidian Dark Mode — WCAG AA/AAA High Contrast */
+    --color-background: 9 20 34;            /* #091422 Midnight Obsidian Canvas */
+    --color-foreground: 248 250 252;        /* #F8FAFC Crisp Alabaster White Ink */
+    --color-card: 17 34 56;                 /* #112238 Elevated Obsidian Card Surface */
+    --color-card-foreground: 248 250 252;   /* #F8FAFC */
+    --color-stone: 26 47 76;                /* #1A2F4C Deep Meridian Secondary Surface */
+    --color-primary: 20 184 138;            /* #14B88A Luminous Meridian Emerald */
+    --color-primary-foreground: 255 255 255;/* #FFFFFF Crisp White on Primary Buttons */
+    --color-secondary: 194 208 226;         /* #C2D0E2 High-Legibility Silver-Slate Text */
+    --color-secondary-foreground: 9 20 34;  /* #091422 */
+    --color-gold: 251 191 36;               /* #FBBF24 Luminous Amber Gold */
+    --color-accent: 21 54 64;               /* #153640 Deep Emerald Surface Tint */
+    --color-accent-foreground: 45 212 191;  /* #2DD4BF */
+    --color-muted: 26 47 76;                /* #1A2F4C */
+    --color-muted-foreground: 194 208 226;  /* #C2D0E2 */
+    --color-destructive: 248 113 113;       /* #F87171 */
+    --color-border: 45 72 107;              /* #2D486B Clearly Visible Slate Border */
+    --color-input: 45 72 107;               /* #2D486B */
+    --color-ring: 20 184 138;               /* #14B88A */
+
+    /* Standard semantic CSS variables (Dark Mode) */
+    --background: oklch(0.18 0.03 245);
+    --foreground: oklch(0.98 0.005 240);
+    --card: oklch(0.24 0.038 245);
+    --card-foreground: oklch(0.98 0.005 240);
+    --popover: oklch(0.24 0.038 245);
+    --popover-foreground: oklch(0.98 0.005 240);
+    --primary: oklch(0.70 0.15 165);
+    --primary-foreground: oklch(0.99 0 0);
+    --secondary: oklch(0.29 0.042 245);
+    --secondary-foreground: oklch(0.98 0.005 240);
+    --muted: oklch(0.29 0.042 245);
+    --muted-foreground: oklch(0.84 0.025 240);
+    --accent: oklch(0.31 0.045 190);
+    --accent-foreground: oklch(0.85 0.12 175);
+    --destructive: oklch(0.68 0.20 25);
+    --border: oklch(0.37 0.045 245);
+    --input: oklch(0.37 0.045 245);
+    --ring: oklch(0.70 0.15 165);
+
+    --shadow-card: 0 4px 14px -2px rgb(2 8 18 / 0.55), 0 2px 6px -1px rgb(2 8 18 / 0.4);
+    --shadow-card-hover: 0 20px 42px -10px rgb(2 8 18 / 0.7), 0 6px 14px -3px rgb(20 184 138 / 0.15);
   }
 
   html {
@@ -52,14 +126,71 @@
     @apply font-sans;
   }
 
+  /* Smooth orchestrated transition when switching between Light and Dark themes */
+  html.theme-transitioning,
+  html.theme-transitioning *,
+  html.theme-transitioning *::before,
+  html.theme-transitioning *::after {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow !important;
+    transition-duration: 420ms !important;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
   body {
-    @apply font-sans antialiased bg-background text-foreground selection:bg-primary/15 selection:text-primary;
+    @apply font-sans antialiased bg-background text-foreground selection:bg-primary/20 selection:text-primary;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  h1, h2, .font-display {
+  h1, h2, h3, h4, .font-display {
     font-family: var(--font-heading);
     font-optical-sizing: auto;
+  }
+
+  /* Universal Dark/Light Mode Visibility Guarantee for Form Fields & Dropdowns */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    background-color: rgb(var(--color-card));
+    color: rgb(var(--color-foreground));
+    border-color: rgb(var(--color-border));
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: rgb(var(--color-secondary) / 0.78);
+  }
+
+  select option {
+    background-color: rgb(var(--color-card));
+    color: rgb(var(--color-foreground));
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: rgb(var(--color-primary));
+  }
+
+  /* Global safeguard: prevent hardcoded .bg-white surfaces from blinding or hiding light text in Dark Mode */
+  .dark .bg-white,
+  [data-theme="dark"] .bg-white {
+    background-color: rgb(var(--color-card)) !important;
+    color: rgb(var(--color-foreground));
+  }
+
+  /* Ensure semantic feedback colors remain vibrant and high-contrast in Dark Mode */
+  .dark .text-success,
+  [data-theme="dark"] .text-success {
+    color: #34D399 !important;
+  }
+
+  .dark .text-warning,
+  [data-theme="dark"] .text-warning {
+    color: #FBBF24 !important;
+  }
+
+  .dark .text-error,
+  [data-theme="dark"] .text-error {
+    color: #F87171 !important;
   }
 
   /* Consistent, visible keyboard focus everywhere. */

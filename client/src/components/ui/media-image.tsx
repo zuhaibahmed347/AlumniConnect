@@ -48,7 +48,6 @@ export function MediaImage({
           referrerPolicy="no-referrer"
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"
-          fetchPriority={eager ? 'high' : 'auto'}
           onError={() => setFailed(true)}
           className={cn('h-full w-full object-cover', imgClassName)}
           {...props}

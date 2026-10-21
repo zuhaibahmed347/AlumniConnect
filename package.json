@@ -26,13 +26,20 @@
     "format": "npm run format --workspaces"
   },
   "devDependencies": {
+    "@types/d3-geo": "^3.1.1",
+    "@types/topojson-client": "^3.1.5",
     "concurrently": "^8.2.2"
   },
   "engines": {
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@google/genai": "^2.30.0",
+    "d3-geo": "^3.1.1",
+    "framer-motion": "^10.17.4",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
   }
 }

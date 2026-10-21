@@ -1,6 +1,8 @@
 import { Avatar } from '@/components/ui/avatar'
-import { Input } from '@/components/ui/input'
+import { Input, SelectField } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { ThemeSwitcher } from '@/components/ui/theme-switcher'
+import { toast } from '@/lib/toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -11,7 +13,7 @@ export function AdminUsersPage() {
 
   const [users, setUsers] = useState<any[]>([])
   const [filters, setFilters] = useState({
-    search: '' ,
+    search: '',
     role: '' as string,
     status: '' as string,
     page: 1 as number,
@@ -21,7 +23,6 @@ export function AdminUsersPage() {
   const { register, handleSubmit } = useForm({ defaultValues: { search: '', role: '', status: '', page: 1, limit: 20 } })
 
   useEffect(() => {
-    // In a real app, this would fetch users from the API
     const mockUsers = [
       {
         id: '1',
@@ -89,7 +90,6 @@ export function AdminUsersPage() {
   }, [])
 
   const onSubmit = (data: any) => {
-    // Handle filter submission
     const newPage = data.page != null ? Number(data.page) : filters.page
     const newLimit = data.limit != null ? Number(data.limit) : filters.limit
     setFilters({
@@ -117,60 +117,57 @@ export function AdminUsersPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="border-b border-border/50 bg-background/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold tracking-tight">User Management</h1>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
-            ← Back to Dashboard
-          </Button>
+          <h1 className="text-xl font-bold tracking-tight text-foreground">User Management</h1>
+          <div className="flex items-center gap-3">
+            <ThemeSwitcher />
+            <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
+              ← Back to Dashboard
+            </Button>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-
         {/* Filters */}
         <motion.section
-          className="mb-6 rounded-lg border bg-card/50 p-4"
+          className="mb-6 rounded-lg border border-border bg-card p-4 shadow-sm"
           variants={userRowVariants}
           initial="hidden"
           animate="visible"
         >
-          <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols- lg:grid-cols-6 gap-3">
-            {/* Search */}
+          <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-center">
             <div>
               <Input
                 placeholder="Search users..."
                 {...register('search')}
-                className="flex-1 rounded border border-border px-3 py-2"
               />
             </div>
 
-            {/* Role Filter */}
             <div>
-              <select {...register('role')} className="rounded border border-border px-3 py-2">
+              <SelectField {...register('role')} aria-label="Filter by role">
                 <option value="">All Roles</option>
-                <option>SUPER_ADMIN</option>
-                <option>ADMIN</option>
-                <option>MEMBER</option>
-              </select>
+                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                <option value="ADMIN">ADMIN</option>
+                <option value="MEMBER">MEMBER</option>
+              </SelectField>
             </div>
 
-            {/* Status Filter */}
             <div>
-              <select {...register('status')} className="rounded border border-border px-3 py-2">
+              <SelectField {...register('status')} aria-label="Filter by status">
                 <option value="">All Statuses</option>
-                <option>ACTIVE</option>
-                <option>PENDING_VERIFICATION</option>
-                <option>SUSPENDED</option>
-              </select>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="PENDING_VERIFICATION">PENDING_VERIFICATION</option>
+                <option value="SUSPENDED">SUSPENDED</option>
+              </SelectField>
             </div>
 
-            {/* Apply Filters */}
-            <Button type="submit" className="sm:col-auto w-auto">
-              Apply
+            <Button type="submit" className="w-full sm:w-auto">
+              Apply Filters
             </Button>
           </form>
         </motion.section>
@@ -181,18 +178,18 @@ export function AdminUsersPage() {
           initial="hidden"
           animate="visible"
         >
-          <section className="bg-white">
+          <section className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
             <div className="max-w-7xl mx-auto">
               <div className="overflow-x-auto">
-                <table className="w-full min-w-full rounded-lg border border-border/50">
+                <table className="w-full min-w-full">
                   <thead>
-                    <tr className="border-b border-border/10">
-                      <th className="p-3 text-left text-sm font-medium text-secondary">Name</th>
-                      <th className="p-3 text-left text-sm font-medium text-secondary">Email</th>
-                      <th className="p-3 text-left text-sm font-medium text-secondary">Role</th>
-                      <th className="p-3 text-left text-sm font-medium text-secondary">Status</th>
-                      <th className="p-3 text-left text-sm font-medium text-secondary">Joined</th>
-                      <th className="p-3 text-right text-sm font-medium text-secondary">Actions</th>
+                    <tr className="border-b border-border bg-stone/40">
+                      <th className="p-3.5 text-left text-xs font-semibold uppercase tracking-wider text-secondary">Name</th>
+                      <th className="p-3.5 text-left text-xs font-semibold uppercase tracking-wider text-secondary">Email</th>
+                      <th className="p-3.5 text-left text-xs font-semibold uppercase tracking-wider text-secondary">Role</th>
+                      <th className="p-3.5 text-left text-xs font-semibold uppercase tracking-wider text-secondary">Status</th>
+                      <th className="p-3.5 text-left text-xs font-semibold uppercase tracking-wider text-secondary">Joined</th>
+                      <th className="p-3.5 text-right text-xs font-semibold uppercase tracking-wider text-secondary">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -202,76 +199,82 @@ export function AdminUsersPage() {
                         variants={userRowVariants}
                         initial="hidden"
                         animate="visible"
-                        style={{ transitionDelay: String(users.indexOf(user) * 0.02) + 's' }}
+                        className="border-b border-border/60 hover:bg-primary/5 transition-colors"
                       >
-                        <tr
-                          key={user.id}
-                          className="border-b border-border/10 hover:bg-primary/5"
-                        >
-                          <td className="p-3">
-                            <div className="flex items-center gap-2">
-                              <Avatar
-                                className="h-5 w-5"
-                                >{user.name.substring(0, 1)}</Avatar>
-                              <span>{user.name}</span>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <a
-                              href={`mailto:${user.email}`}
-                              className="text-primary hover:text-secondary underline"
-                            >
-                              {user.email}
-                            </a>
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className={
-                                user.role === 'ADMIN'
-                                  ? 'text-primary'
-                                  : 'text-secondary'
-                              }
-                            >
-                              {user.role}
-                            </span>
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className={
-                                user.status === 'ACTIVE'
-                                  ? 'text-success'
-                                  : user.status === 'PENDING_VERIFICATION'
-                                    ? 'text-warning'
-                                    : 'text-error'
-                              }
-                            >
-                              {user.status}
-                            </span>
-                          </td>
-                          <td className="p-3">
-                            <p className="text-xs text-secondary/70">
-                              {user.createdAt.toLocaleDateString()}
-                            </p>
-                          </td>
-                          <td className="p-3 text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-primary hover:text-secondary"
-                              onClick={() => alert('Review profile')}
-                            >
-                              Review
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-warning hover:text-secondary ml-1"
-                              onClick={() => alert('Suspend/Reactivate')}
-                            >
-                              {user.status === 'SUSPENDED' ? 'Reactivate' : 'Suspend'}
-                            </Button>
-                          </td>
-                        </tr>
+                        <td className="p-3.5">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar className="h-7 w-7 text-xs">
+                              {user.name.substring(0, 1)}
+                            </Avatar>
+                            <span className="font-medium text-foreground">{user.name}</span>
+                          </div>
+                        </td>
+                        <td className="p-3.5">
+                          <a
+                            href={`mailto:${user.email}`}
+                            className="text-primary dark:text-accent hover:underline text-sm"
+                          >
+                            {user.email}
+                          </a>
+                        </td>
+                        <td className="p-3.5">
+                          <span
+                            className={
+                              user.role === 'ADMIN'
+                                ? 'text-primary dark:text-accent font-semibold text-xs'
+                                : 'text-secondary text-xs font-medium'
+                            }
+                          >
+                            {user.role}
+                          </span>
+                        </td>
+                        <td className="p-3.5">
+                          <span
+                            className={`text-xs font-semibold ${
+                              user.status === 'ACTIVE'
+                                ? 'text-success'
+                                : user.status === 'PENDING_VERIFICATION'
+                                  ? 'text-warning'
+                                  : 'text-error'
+                            }`}
+                          >
+                            {user.status}
+                          </span>
+                        </td>
+                        <td className="p-3.5">
+                          <p className="text-xs text-secondary">
+                            {user.createdAt.toLocaleDateString()}
+                          </p>
+                        </td>
+                        <td className="p-3.5 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              toast({
+                                title: `Reviewing ${user.name}`,
+                                description: `${user.profile?.headline || 'Alumni Member'} (${user.email})`,
+                                variant: 'default',
+                              })
+                            }
+                          >
+                            Review
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-warning hover:text-warning/80 ml-1"
+                            onClick={() =>
+                              toast({
+                                title: user.status === 'SUSPENDED' ? 'User Reactivated' : 'User Suspended',
+                                description: `Account status updated for ${user.name}.`,
+                                variant: 'default',
+                              })
+                            }
+                          >
+                            {user.status === 'SUSPENDED' ? 'Reactivate' : 'Suspend'}
+                          </Button>
+                        </td>
                       </motion.tr>
                     ))}
                   </tbody>
@@ -280,20 +283,18 @@ export function AdminUsersPage() {
 
               {/* Pagination */}
               {users.length > 0 && (
-                <div className="mt-6 flex justify-center items-center gap-2 text-sm text-secondary">
-                  <span>Page {filters.page} of {4}</span>
+                <div className="p-4 border-t border-border flex justify-center items-center gap-2 text-sm text-secondary">
+                  <span className="mr-2">Page {filters.page} of 4</span>
                   <Button
                     variant="outline"
-                    size="default"
-                    className="h-8 w-8 flex items-center justify-center"
+                    size="sm"
                     onClick={() => setFilters({ ...filters, page: 1 })}
                   >
                     First
                   </Button>
                   <Button
                     variant="outline"
-                    size="default"
-                    className="h-8 w-8 flex items-center justify-center"
+                    size="sm"
                     onClick={() =>
                       setFilters({ ...filters, page: Math.max(filters.page - 1, 1) })
                     }
@@ -302,8 +303,7 @@ export function AdminUsersPage() {
                   </Button>
                   <Button
                     variant="outline"
-                    size="default"
-                    className="h-8 w-8 flex items-center justify-center"
+                    size="sm"
                     onClick={() =>
                       setFilters({ ...filters, page: Math.min(filters.page + 1, 4) })
                     }
@@ -312,9 +312,8 @@ export function AdminUsersPage() {
                   </Button>
                   <Button
                     variant="outline"
-                    size="default"
-                    className="h-8 w-8 flex items-center justify-center"
-                    onClick={() => setFilters({ ...filters, page: 4 }) }
+                    size="sm"
+                    onClick={() => setFilters({ ...filters, page: 4 })}
                   >
                     Last
                   </Button>
