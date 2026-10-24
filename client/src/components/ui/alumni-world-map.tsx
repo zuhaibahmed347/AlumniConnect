@@ -1,4 +1,5 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import {
   geoNaturalEarth1,
   geoPath,
@@ -18,7 +19,14 @@ import {
   Briefcase,
   Sparkles,
   MapPin,
+  X,
+  GraduationCap,
+  Building2,
+  UserPlus,
+  Check,
+  ArrowUpRight,
 } from 'lucide-react'
+import { toast } from '@/lib/toast'
 
 export type MapRegionFilter = 'all' | 'pakistan' | 'gulf' | 'west' | 'apac'
 
@@ -645,6 +653,381 @@ const REGION_VIEWPORTS: Record<MapRegionFilter, RegionViewport> = {
   },
 }
 
+interface FeaturedCountryAlumnus {
+  id: string
+  name: string
+  role: string
+  company: string
+  cohort: string
+  department: string
+  cityHub: string
+  mentorshipFocus: string
+  isMentor: boolean
+  canRefer: boolean
+  avatarUrl: string
+}
+
+const CURATED_COUNTRY_ALUMNI: Record<string, FeaturedCountryAlumnus[]> = {
+  PK: [
+    {
+      id: 'pk-1',
+      name: 'Ayesha Siddiqui',
+      role: 'Principal Systems Architect',
+      company: 'Systems Ltd',
+      cohort: 'Class of 2016',
+      department: 'BS Computer Science',
+      cityHub: 'Karachi',
+      mentorshipFocus: 'Cloud Native Architecture & Capstone Advisory',
+      isMentor: true,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'pk-2',
+      name: 'Dr. Waqas Ahmed',
+      role: 'Associate Dean & AI Research Lead',
+      company: 'Sukkur IBA University',
+      cohort: 'Class of 2012',
+      department: 'BS Computer Science',
+      cityHub: 'Sukkur Main Campus',
+      mentorshipFocus: 'NLP Research Fellowships & Graduate Admissions',
+      isMentor: true,
+      canRefer: false,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'pk-3',
+      name: 'Hina Memon',
+      role: 'VP Digital Banking & FinTech',
+      company: 'HBL',
+      cohort: 'Class of 2015',
+      department: 'MBA Finance',
+      cityHub: 'Islamabad',
+      mentorshipFocus: 'Digital Payment Rails & Product Leadership',
+      isMentor: true,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'pk-4',
+      name: 'Zainab Khuhro',
+      role: 'Lead Distributed Systems Engineer',
+      company: 'Jazz Digital',
+      cohort: 'Class of 2019',
+      department: 'BS Software Engineering',
+      cityHub: 'Lahore',
+      mentorshipFocus: 'High-Throughput Microservices & Go/Kubernetes',
+      isMentor: false,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+  ],
+  AE: [
+    {
+      id: 'ae-1',
+      name: 'Bilal Qureshi',
+      role: 'VP of Product Strategy',
+      company: 'Careem',
+      cohort: 'Class of 2016',
+      department: 'MBA',
+      cityHub: 'Dubai Internet City',
+      mentorshipFocus: 'MENA Super-App Growth & GCC Relocation',
+      isMentor: true,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'ae-2',
+      name: 'Sanaullah Mahar',
+      role: 'Staff Platform Engineer',
+      company: 'Talabat',
+      cohort: 'Class of 2017',
+      department: 'BS Computer Science',
+      cityHub: 'Dubai Internet City',
+      mentorshipFocus: 'Real-Time Logistics & Distributed Tracing',
+      isMentor: true,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'ae-3',
+      name: 'Farhan Soomro',
+      role: 'Director of Sovereign Cloud AI',
+      company: 'G42',
+      cohort: 'Class of 2014',
+      department: 'BE Electrical Engineering',
+      cityHub: 'Abu Dhabi ADGM',
+      mentorshipFocus: 'LLM Infrastructure & Enterprise AI Governance',
+      isMentor: true,
+      canRefer: false,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'ae-4',
+      name: 'Nadia Shaikh',
+      role: 'Lead Risk & Treasury Analyst',
+      company: 'Emirates NBD',
+      cohort: 'Class of 2018',
+      department: 'BBA Finance',
+      cityHub: 'Dubai',
+      mentorshipFocus: 'GCC Banking Careers & CFA Track Coaching',
+      isMentor: false,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+  ],
+  SA: [
+    {
+      id: 'sa-1',
+      name: 'Tariq Jamil Kalhoro',
+      role: 'Principal FinTech Architect',
+      company: 'STC Pay',
+      cohort: 'Class of 2015',
+      department: 'BS Computer Science',
+      cityHub: 'Riyadh KAFD',
+      mentorshipFocus: 'Payment Gateways & KSA Vision 2030 Tech Roles',
+      isMentor: true,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'sa-2',
+      name: 'Engr. Kashif Bhutto',
+      role: 'Senior Industrial IoT Lead',
+      company: 'Aramco Digital',
+      cohort: 'Class of 2016',
+      department: 'BE Electrical Engineering',
+      cityHub: 'Dammam / Dhahran',
+      mentorshipFocus: 'Smart Energy Grids & Industrial Automation',
+      isMentor: true,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'sa-3',
+      name: 'Rabia Channa',
+      role: 'Smart City Data Engineering Lead',
+      company: 'NEOM Tech',
+      cohort: 'Class of 2018',
+      department: 'BS Software Engineering',
+      cityHub: 'Riyadh / NEOM',
+      mentorshipFocus: 'Digital Twin Pipelines & Spatial Analytics',
+      isMentor: true,
+      canRefer: false,
+      avatarUrl: '/images/avatar.jpg',
+    },
+  ],
+  US: [
+    {
+      id: 'us-1',
+      name: 'Dr. Kamran Brohi',
+      role: 'Staff Research Scientist',
+      company: 'Google',
+      cohort: 'Class of 2014',
+      department: 'BS Computer Science',
+      cityHub: 'San Francisco Bay Area',
+      mentorshipFocus: 'Fulbright PhD Advisory & Multimodal ML Systems',
+      isMentor: true,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'us-2',
+      name: 'komal Abbasi',
+      role: 'Principal Cloud Infrastructure Engineer',
+      company: 'AWS',
+      cohort: 'Class of 2017',
+      department: 'BS Computer Science',
+      cityHub: 'Seattle',
+      mentorshipFocus: 'Distributed Storage & System Design Interviews',
+      isMentor: true,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'us-3',
+      name: 'Junaid Lashari',
+      role: 'Senior Payments Engineering Manager',
+      company: 'Stripe',
+      cohort: 'Class of 2015',
+      department: 'BS Software Engineering',
+      cityHub: 'New York',
+      mentorshipFocus: 'Engineering Management & Global Mobility',
+      isMentor: true,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'us-4',
+      name: 'Mehwish Jokhio',
+      role: 'Senior AI Product Lead',
+      company: 'Microsoft',
+      cohort: 'Class of 2018',
+      department: 'MBA',
+      cityHub: 'Austin',
+      mentorshipFocus: 'Enterprise Copilot Adoption & B2B Product Strategy',
+      isMentor: false,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+  ],
+  GB: [
+    {
+      id: 'gb-1',
+      name: 'Usman Memon',
+      role: 'Staff Core Banking Engineer',
+      company: 'Revolut',
+      cohort: 'Class of 2016',
+      department: 'BS Computer Science',
+      cityHub: 'London',
+      mentorshipFocus: 'UK Global Talent Visa & High-Frequency Ledgers',
+      isMentor: true,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'gb-2',
+      name: 'Dr. Sidra Pathan',
+      role: 'Senior Research Scientist',
+      company: 'DeepMind',
+      cohort: 'Class of 2015',
+      department: 'BS Computer Science',
+      cityHub: 'London / Cambridge',
+      mentorshipFocus: 'Commonwealth Scholarships & Reinforcement Learning',
+      isMentor: true,
+      canRefer: false,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'gb-3',
+      name: 'Ahsan Shaikh',
+      role: 'VP Quantitative Risk',
+      company: 'Barclays',
+      cohort: 'Class of 2014',
+      department: 'BBA Finance',
+      cityHub: 'London',
+      mentorshipFocus: 'Quantitative Finance & UK Financial Services',
+      isMentor: true,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+  ],
+  DE: [
+    {
+      id: 'de-1',
+      name: 'Dr. Sarmad Mahar',
+      role: 'Lead Robotics & Power Systems Engineer',
+      company: 'Siemens',
+      cohort: 'Class of 2017',
+      department: 'BE Electrical Engineering',
+      cityHub: 'Munich',
+      mentorshipFocus: 'DAAD Fellowships & Embedded Hardware Systems',
+      isMentor: true,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'de-2',
+      name: 'Faryal Pirzada',
+      role: 'Senior Distributed Systems Engineer',
+      company: 'Zalando',
+      cohort: 'Class of 2019',
+      department: 'BS Software Engineering',
+      cityHub: 'Berlin',
+      mentorshipFocus: 'EU Blue Card Relocation & Platform Engineering',
+      isMentor: true,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+    {
+      id: 'de-3',
+      name: 'Danish Kazi',
+      role: 'Enterprise Cloud Architect',
+      company: 'SAP',
+      cohort: 'Class of 2016',
+      department: 'BS Computer Science',
+      cityHub: 'Frankfurt',
+      mentorshipFocus: 'Enterprise B2B SaaS & Cloud Migrations',
+      isMentor: false,
+      canRefer: true,
+      avatarUrl: '/images/avatar.jpg',
+    },
+  ],
+}
+
+const REGIONAL_SCHOLAR_TEMPLATES = [
+  {
+    namePrefix: 'Engr. Asadullah',
+    nameSuffix: 'Memon',
+    role: 'Principal Cloud & Systems Architect',
+    cohort: 'Class of 2016',
+    department: 'BS Computer Science',
+    mentorshipFocus: 'Distributed Systems, Visa Sponsorship & Technical Interviews',
+    isMentor: true,
+    canRefer: true,
+  },
+  {
+    namePrefix: 'Dr. Nida',
+    nameSuffix: 'Qureshi',
+    role: 'Senior AI & Data Science Lead',
+    cohort: 'Class of 2017',
+    department: 'BS Software Engineering',
+    mentorshipFocus: 'Graduate Research Fellowships & Applied Machine Learning',
+    isMentor: true,
+    canRefer: true,
+  },
+  {
+    namePrefix: 'Muzammil',
+    nameSuffix: 'Soomro',
+    role: 'Director of FinTech & Strategy',
+    cohort: 'Class of 2015',
+    department: 'MBA Finance',
+    mentorshipFocus: 'Product Strategy, Cross-Border Mobility & Executive Growth',
+    isMentor: true,
+    canRefer: false,
+  },
+  {
+    namePrefix: 'Sadia',
+    nameSuffix: 'Kalhoro',
+    role: 'Staff Power & Embedded Systems Engineer',
+    cohort: 'Class of 2019',
+    department: 'BE Electrical Engineering',
+    mentorshipFocus: 'Clean Energy Grids, IoT Hardware & Chapter Onboarding',
+    isMentor: false,
+    canRefer: true,
+  },
+]
+
+function getFeaturedAlumniForCountry(
+  country: CountryAlumniRecord
+): FeaturedCountryAlumnus[] {
+  if (CURATED_COUNTRY_ALUMNI[country.isoCode]) {
+    return CURATED_COUNTRY_ALUMNI[country.isoCode]
+  }
+
+  return REGIONAL_SCHOLAR_TEMPLATES.map((tpl, idx) => {
+    const employer =
+      country.topEmployers[idx % country.topEmployers.length] ||
+      'Global Chapter Partner'
+    const city =
+      country.primaryHubs[idx % country.primaryHubs.length] ||
+      country.displayName
+    return {
+      id: `${country.isoCode.toLowerCase()}-${idx + 1}`,
+      name: `${tpl.namePrefix} ${tpl.nameSuffix}`,
+      role: tpl.role,
+      company: employer.trim(),
+      cohort: tpl.cohort,
+      department: tpl.department,
+      cityHub: city,
+      mentorshipFocus: tpl.mentorshipFocus,
+      isMentor: tpl.isMentor,
+      canRefer: tpl.canRefer && country.openReferrals > 0,
+      avatarUrl: '/images/avatar.jpg',
+    }
+  })
+}
+
 interface AlumniWorldMapProps {
   /** Optional external region sync (e.g. from the landing page impact section) */
   activeRegion?: 'global' | 'pakistan' | 'gulf' | 'west'
@@ -666,11 +1049,33 @@ export function AlumniWorldMap({
     useState<CountryAlumniRecord | null>(null)
   const [selectedCountry, setSelectedCountry] =
     useState<CountryAlumniRecord | null>(ALUMNI_COUNTRIES_DATA[0])
+  const [modalCountry, setModalCountry] =
+    useState<CountryAlumniRecord | null>(null)
+  const [modalFilter, setModalFilter] = useState<'all' | 'mentors' | 'referrals'>('all')
+  const [requestedIntroIds, setRequestedIntroIds] = useState<Record<string, boolean>>({})
   const [pointerPos, setPointerPos] = useState<{ x: number; y: number }>({
     x: 0,
     y: 0,
   })
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!modalCountry) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setModalCountry(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [modalCountry])
+
+  const openCountryModal = (country: CountryAlumniRecord) => {
+    setSelectedCountry(country)
+    setModalFilter('all')
+    setModalCountry(country)
+    onCountrySelect?.(country)
+  }
 
   const effectiveRegion: MapRegionFilter = useMemo(() => {
     if (!activeRegion) return internalRegion
@@ -1043,8 +1448,7 @@ export function AlumniWorldMap({
                     }}
                     onClick={() => {
                       if (record) {
-                        setSelectedCountry(record)
-                        onCountrySelect?.(record)
+                        openCountryModal(record)
                       }
                     }}
                   />
@@ -1093,8 +1497,7 @@ export function AlumniWorldMap({
                     className="cursor-pointer"
                     onMouseEnter={() => setHoveredCountry(record)}
                     onClick={() => {
-                      setSelectedCountry(record)
-                      onCountrySelect?.(record)
+                      openCountryModal(record)
                     }}
                   >
                     {/* Pulse Halo for Major Chapter Hubs */}
@@ -1314,6 +1717,22 @@ export function AlumniWorldMap({
                 {activeInspectionRecord.topEmployers.join(' · ')}
               </p>
             </div>
+
+            <button
+              type="button"
+              onClick={() => openCountryModal(activeInspectionRecord)}
+              className={`mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-colors ${
+                isDark
+                  ? 'bg-[#0D6E5B] text-white hover:bg-[#10B981] shadow-sm'
+                  : 'bg-primary text-white hover:bg-primary/90 shadow-sm'
+              }`}
+            >
+              <Users className="h-3.5 w-3.5" />
+              <span>
+                View Featured Alumni in {activeInspectionRecord.displayName}
+              </span>
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </button>
           </div>
 
           {/* Scrollable 42-Country Distribution List */}
@@ -1327,7 +1746,7 @@ export function AlumniWorldMap({
                 Country Ranking ({filteredCountriesList.length})
               </span>
               <span className={isDark ? 'text-white/50' : 'text-secondary/80'}>
-                Click to inspect
+                Click for featured alumni
               </span>
             </div>
 
@@ -1342,8 +1761,7 @@ export function AlumniWorldMap({
                     onMouseEnter={() => setHoveredCountry(country)}
                     onMouseLeave={() => setHoveredCountry(null)}
                     onClick={() => {
-                      setSelectedCountry(country)
-                      onCountrySelect?.(country)
+                      openCountryModal(country)
                     }}
                     className={`w-full px-3 py-2 rounded-lg text-left text-xs flex items-center justify-between gap-2 transition-colors ${
                       isSelected
@@ -1371,6 +1789,286 @@ export function AlumniWorldMap({
           </div>
         </div>
       </div>
+
+      {/* Country Click Modal Pop-Up: Featured Alumni from Selected Country & Region */}
+      <AnimatePresence>
+        {modalCountry && (
+          <motion.div
+            key="country-alumni-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setModalCountry(null)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="country-modal-title"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 18 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-3xl rounded-3xl border border-border bg-card text-foreground shadow-2xl overflow-hidden my-auto"
+            >
+              {/* Modal Top Accent Header */}
+              <div className="p-6 sm:p-7 border-b border-border bg-stone/50 dark:bg-white/[0.03]">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-mono mb-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-primary/15 text-primary dark:bg-primary/25 dark:text-[#2DD4BF] font-bold">
+                        {modalCountry.isoCode} Chapter
+                      </span>
+                      <span aria-hidden="true" className="text-border">
+                        ·
+                      </span>
+                      <span className="text-secondary font-semibold">
+                        {modalCountry.regionLabel}
+                      </span>
+                      <span aria-hidden="true" className="text-border">
+                        ·
+                      </span>
+                      <span className="text-gold dark:text-[#F59E0B] font-semibold">
+                        {modalCountry.alumniCount.toLocaleString()} Verified Alumni
+                      </span>
+                    </div>
+
+                    <h3
+                      id="country-modal-title"
+                      className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-foreground"
+                    >
+                      Featured Alumni in {modalCountry.displayName}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-secondary mt-1">
+                      Active chapter hubs:{' '}
+                      <span className="font-semibold text-foreground">
+                        {modalCountry.primaryHubs.join(' · ')}
+                      </span>
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setModalCountry(null)}
+                    aria-label="Close country alumni modal"
+                    className="p-2 rounded-xl border border-border bg-card text-secondary hover:text-foreground hover:bg-stone transition-colors shrink-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Telemetry & Filter Strip */}
+                <div className="mt-5 pt-4 border-t border-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-4 text-xs font-mono tabular-nums">
+                    <span className="inline-flex items-center gap-1.5 text-foreground">
+                      <Users className="h-3.5 w-3.5 text-primary dark:text-[#2DD4BF]" />
+                      <strong>{modalCountry.alumniCount.toLocaleString()}</strong>{' '}
+                      <span className="text-secondary">Graduates</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-foreground">
+                      <Sparkles className="h-3.5 w-3.5 text-gold dark:text-[#F59E0B]" />
+                      <strong>{modalCountry.mentorsCount}</strong>{' '}
+                      <span className="text-secondary">Mentors</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-foreground">
+                      <Briefcase className="h-3.5 w-3.5 text-primary dark:text-[#2DD4BF]" />
+                      <strong>{modalCountry.openReferrals}</strong>{' '}
+                      <span className="text-secondary">Open Referrals</span>
+                    </span>
+                  </div>
+
+                  {/* Filter Segmented Control */}
+                  <div
+                    role="group"
+                    aria-label="Filter featured country alumni"
+                    className="inline-flex items-center gap-1 p-1 rounded-xl bg-stone border border-border/70 self-start sm:self-auto"
+                  >
+                    {(
+                      [
+                        { id: 'all', label: 'All Featured' },
+                        { id: 'mentors', label: 'Mentors' },
+                        { id: 'referrals', label: 'Referrers' },
+                      ] as const
+                    ).map((tab) => {
+                      const active = modalFilter === tab.id
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setModalFilter(tab.id)}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                            active
+                              ? 'bg-card text-foreground font-semibold shadow-sm'
+                              : 'text-secondary hover:text-foreground'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Featured Alumni List Body */}
+              <div className="p-6 sm:p-7 max-h-[60vh] overflow-y-auto space-y-3.5 bg-background/60">
+                {(() => {
+                  const allFeatured = getFeaturedAlumniForCountry(modalCountry)
+                  const visibleFeatured = allFeatured.filter((alum) => {
+                    if (modalFilter === 'mentors') return alum.isMentor
+                    if (modalFilter === 'referrals') return alum.canRefer
+                    return true
+                  })
+
+                  if (visibleFeatured.length === 0) {
+                    return (
+                      <div className="py-8 text-center text-sm text-secondary">
+                        No featured scholars match this filter in{' '}
+                        {modalCountry.displayName}.{' '}
+                        <button
+                          type="button"
+                          onClick={() => setModalFilter('all')}
+                          className="text-primary dark:text-[#2DD4BF] font-semibold underline ml-1"
+                        >
+                          Show all featured alumni
+                        </button>
+                      </div>
+                    )
+                  }
+
+                  return visibleFeatured.map((alum) => {
+                    const isRequested = Boolean(requestedIntroIds[alum.id])
+                    return (
+                      <motion.div
+                        key={alum.id}
+                        layout
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-primary/40 transition-colors shadow-sm"
+                      >
+                        <div className="flex items-start gap-3.5 min-w-0">
+                          <img
+                            src={alum.avatarUrl}
+                            alt={alum.name}
+                            className="h-12 w-12 rounded-xl object-cover ring-1 ring-border shrink-0"
+                          />
+                          <div className="min-w-0 space-y-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="font-display text-base font-bold text-foreground truncate">
+                                {alum.name}
+                              </h4>
+                              {alum.isMentor && (
+                                <span className="text-[11px] font-mono font-semibold text-primary dark:text-[#2DD4BF]">
+                                  · Verified Mentor
+                                </span>
+                              )}
+                              {alum.canRefer && (
+                                <span className="text-[11px] font-mono font-semibold text-gold dark:text-[#F59E0B]">
+                                  · Referral Sponsor
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-xs sm:text-sm font-medium text-foreground/90 flex flex-wrap items-center gap-1.5">
+                              <Building2 className="h-3.5 w-3.5 text-primary dark:text-[#2DD4BF] shrink-0" />
+                              <span>
+                                {alum.role} · <strong>{alum.company}</strong>
+                              </span>
+                            </p>
+
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-secondary font-mono">
+                              <span className="inline-flex items-center gap-1">
+                                <GraduationCap className="h-3.5 w-3.5 text-secondary" />
+                                {alum.department} ({alum.cohort})
+                              </span>
+                              <span aria-hidden="true">·</span>
+                              <span className="inline-flex items-center gap-1">
+                                <MapPin className="h-3.5 w-3.5 text-primary dark:text-[#2DD4BF]" />
+                                {alum.cityHub}, {modalCountry.displayName}
+                              </span>
+                            </div>
+
+                            <p className="text-xs text-secondary pt-0.5">
+                              <span className="font-semibold text-foreground/85">
+                                Advisory Focus:
+                              </span>{' '}
+                              {alum.mentorshipFocus}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex sm:flex-col items-center sm:items-end justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/60">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRequestedIntroIds((prev) => ({
+                                ...prev,
+                                [alum.id]: !prev[alum.id],
+                              }))
+                              if (!isRequested) {
+                                toast.success(
+                                  `Introduction request sent to ${alum.name} (${modalCountry.displayName} Chapter).`
+                                )
+                              }
+                            }}
+                            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors whitespace-nowrap ${
+                              isRequested
+                                ? 'bg-primary/15 text-primary dark:bg-primary/25 dark:text-[#2DD4BF] border border-primary/30'
+                                : 'bg-primary text-white hover:bg-primary/90 shadow-sm'
+                            }`}
+                          >
+                            {isRequested ? (
+                              <>
+                                <Check className="h-3.5 w-3.5" />
+                                <span>Intro Requested</span>
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="h-3.5 w-3.5" />
+                                <span>Request Intro</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </motion.div>
+                    )
+                  })
+                })()}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 sm:px-7 py-4 border-t border-border bg-stone/50 dark:bg-white/[0.03] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <span className="text-secondary font-mono">
+                  Top regional employers:{' '}
+                  <strong className="text-foreground">
+                    {modalCountry.topEmployers.join(' · ')}
+                  </strong>
+                </span>
+
+                <div className="flex items-center gap-2.5 self-end sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => setModalCountry(null)}
+                    className="px-4 py-2 rounded-xl border border-border bg-card text-foreground font-semibold hover:bg-stone transition-colors"
+                  >
+                    Close
+                  </button>
+                  <Link
+                    to={`/alumni?q=${encodeURIComponent(modalCountry.countryName)}`}
+                    onClick={() => setModalCountry(null)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition-colors"
+                  >
+                    <span>Explore Full {modalCountry.isoCode} Directory</span>
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -7,13 +7,23 @@ import {
   Clock,
   Bookmark,
   CheckCircle2,
-  RotateCcw,
   X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Input, SelectField } from '@/components/ui/input'
+import {
+  JobApplicationTracker,
+  type JobTrackerStatus,
+  type TrackedJobItem,
+} from '@/components/ui/job-application-tracker'
 import { ThemeSwitcher } from '@/components/ui/theme-switcher'
 import { GlobalSearchTrigger } from '@/components/ui/global-search-bar'
+import {
+  loadJobApplications,
+  saveJobApplications,
+  type StudentJobApplication,
+} from '@/lib/role-context'
 import { toast } from '@/lib/toast'
 import {
   JobBoardFilter,
@@ -37,6 +47,9 @@ export function JobsPage() {
   const navigate = useNavigate()
   const [jobs, setJobs] = useState<AlumniJobListing[]>(SUKKUR_IBA_JOB_LISTINGS)
   const [savedJobIds, setSavedJobIds] = useState<string[]>(['1', '4'])
+  const [applications, setApplications] = useState<StudentJobApplication[]>(() =>
+    loadJobApplications()
+  )
   const [requestedReferralIds, setRequestedReferralIds] = useState<string[]>([])
   const [showPostModal, setShowPostModal] = useState(false)
 
@@ -95,6 +108,113 @@ export function JobsPage() {
     }
     return counts
   }, [jobs])
+
+  const trackedJobItems: TrackedJobItem[] = useMemo(() => {
+    const items: TrackedJobItem[] = applications.map((app) => {
+      const matchedJob = jobs.find((j) => j.id === app.jobId)
+      return {
+        id: app.id,
+        jobId: app.jobId,
+        jobTitle: app.jobTitle,
+        company: app.company,
+        location: app.location,
+        employmentType: app.employmentType,
+        updatedAt: app.appliedAt,
+        status: app.status,
+        referrer: matchedJob
+          ? `${matchedJob.referrerName} (${matchedJob.referrerCohort})`
+          : undefined,
+      }
+    })
+
+    for (const savedId of savedJobIds) {
+      const alreadyTracked = applications.some((a) => a.jobId === savedId)
+      if (!alreadyTracked) {
+        const matchedJob = jobs.find((j) => j.id === savedId)
+        if (matchedJob) {
+          items.push({
+            id: `saved-${matchedJob.id}`,
+            jobId: matchedJob.id,
+            jobTitle: matchedJob.title,
+            company: matchedJob.company,
+            location: matchedJob.location,
+            employmentType: matchedJob.employmentLabel,
+            updatedAt: 'Bookmarked',
+            status: 'SAVED',
+            referrer: `${matchedJob.referrerName} (${matchedJob.referrerCohort})`,
+          })
+        }
+      }
+    }
+
+    return items
+  }, [applications, savedJobIds, jobs])
+
+  const handleUpdateTrackedJobStatus = (
+    itemId: string,
+    nextStatus: JobTrackerStatus
+  ) => {
+    const statusMap: Record<
+      JobTrackerStatus,
+      StudentJobApplication['status']
+    > = {
+      SAVED: 'SUBMITTED',
+      APPLIED: 'SUBMITTED',
+      INTERVIEWING: 'INTERVIEW',
+      ACCEPTED: 'OFFERED',
+      DECLINED: 'REJECTED',
+    }
+
+    if (itemId.startsWith('saved-')) {
+      const jobId = itemId.replace('saved-', '')
+      const matchedJob = jobs.find((j) => j.id === jobId)
+      if (!matchedJob || nextStatus === 'SAVED') return
+      const newApp: StudentJobApplication = {
+        id: `app-${Date.now()}`,
+        jobId: matchedJob.id,
+        jobTitle: matchedJob.title,
+        company: matchedJob.company,
+        location: matchedJob.location,
+        employmentType: matchedJob.employmentType,
+        appliedAt: new Date().toISOString().slice(0, 10),
+        status: statusMap[nextStatus],
+        applicantName: 'Zainab Magsi',
+        applicantEmail: 'zainab.magsi.bscs22@iba-suk.edu.pk',
+        applicantMajor: 'BS Computer Science',
+        applicantGradYear: 2026,
+        applicantGpa: '3.76 / 4.00',
+        resumeUrl: 'https://iba-suk.edu.pk/portfolios/zainab-magsi-cv.pdf',
+        coverNote: `Tracked via Job Application Tracker (${nextStatus}).`,
+        skills: matchedJob.techStack,
+      }
+      const next = [newApp, ...applications]
+      setApplications(next)
+      saveJobApplications(next)
+      toast.success(`Updated "${matchedJob.title}" status to ${nextStatus}`)
+      return
+    }
+
+    if (nextStatus === 'SAVED') {
+      const targetApp = applications.find((a) => a.id === itemId)
+      if (targetApp) {
+        if (!savedJobIds.includes(targetApp.jobId)) {
+          setSavedJobIds((prev) => [...prev, targetApp.jobId])
+        }
+        const remaining = applications.filter((a) => a.id !== itemId)
+        setApplications(remaining)
+        saveJobApplications(remaining)
+        toast.success(`Moved "${targetApp.jobTitle}" back to Saved jobs`)
+      }
+      return
+    }
+
+    const updated = applications.map((app) =>
+      app.id === itemId ? { ...app, status: statusMap[nextStatus] } : app
+    )
+    setApplications(updated)
+    saveJobApplications(updated)
+    toast.success('Job application status updated.')
+  }
 
   const toggleSaveJob = (e: React.MouseEvent, job: AlumniJobListing) => {
     e.stopPropagation()
@@ -315,6 +435,12 @@ export function JobsPage() {
           </div>
         </section>
 
+        {/* Student Job Application & Saved Roles Status-Pill Tracker */}
+        <JobApplicationTracker
+          items={trackedJobItems}
+          onStatusChange={handleUpdateTrackedJobStatus}
+        />
+
         {/* Advanced Framer Motion Multi-Facet Filter Bar */}
         <JobBoardFilter
           filters={filters}
@@ -494,28 +620,14 @@ export function JobsPage() {
                   )
                 })
               ) : (
-                <motion.div
-                  key="empty-job-board-state"
-                  layout
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  className="col-span-full rounded-2xl border border-border bg-card p-12 text-center max-w-xl mx-auto my-4"
-                >
-                  <p className="text-xs font-mono uppercase tracking-wider text-primary mb-2">
-                    Zero Matching Roles
-                  </p>
-                  <h3 className="font-display text-2xl font-bold text-foreground mb-2">
-                    No alumni-referred roles match this exact filter combination.
-                  </h3>
-                  <p className="text-sm text-secondary mb-6">
-                    Try broadening your selected sector, experience level, or
-                    workplace mode to explore all {jobs.length} active referral
-                    openings.
-                  </p>
-                  <Button
-                    variant="default"
-                    onClick={() =>
+                <div key="empty-job-board-state" className="col-span-full my-4">
+                  <EmptyState
+                    variant="jobs"
+                    badge="No Jobs Found"
+                    title="No alumni-referred roles match this exact filter combination"
+                    description={`Try broadening your selected sector, experience level, or workplace mode to explore all ${jobs.length} active referral openings.`}
+                    actionLabel="Reset All Job Filters"
+                    onAction={() =>
                       setFilters({
                         ...filters,
                         search: '',
@@ -525,11 +637,9 @@ export function JobsPage() {
                         employmentType: 'ALL',
                       })
                     }
-                  >
-                    <RotateCcw className="h-4 w-4 mr-2" />
-                    Reset All Job Filters
-                  </Button>
-                </motion.div>
+                    className="max-w-xl mx-auto"
+                  />
+                </div>
               )}
             </AnimatePresence>
           </motion.section>

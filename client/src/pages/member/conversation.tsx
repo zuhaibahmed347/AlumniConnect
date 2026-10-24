@@ -1,110 +1,149 @@
-import { Avatar } from '@/components/ui/avatar'
+import { RoleShell } from '@/components/layout/role-shell'
 import { Button } from '@/components/ui/button'
-import { ThemeSwitcher } from '@/components/ui/theme-switcher'
-import { Loader2 } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { Input } from '@/components/ui/input'
+import { ALUMNI_DETAILED_CATALOG, getActivePersona } from '@/lib/role-context'
+import { toast } from '@/lib/toast'
+import { ArrowLeft, CheckCircle2, RotateCcw, Send } from 'lucide-react'
+import { useState, type FormEvent } from 'react'
+import { Link, useParams } from 'react-router-dom'
+
+interface SingleMessage {
+  id: string
+  senderName: string
+  isMe: boolean
+  content: string
+  timestamp: string
+  failed?: boolean
+}
 
 export function ConversationPage() {
   const { conversationId } = useParams<{ conversationId: string }>()
-  const navigate = useNavigate()
+  const partner =
+    ALUMNI_DETAILED_CATALOG.find((a) => a.id === conversationId) ??
+    ALUMNI_DETAILED_CATALOG[0]
 
-  const [messages, setMessages] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [messages, setMessages] = useState<SingleMessage[]>([
+    {
+      id: '1',
+      senderName: partner.name,
+      isMe: false,
+      content: `Salam! Glad to connect through Sukkur IBA AlumniConnect. Let me know how I can help with your ${partner.industry} career plans or technical preparation.`,
+      timestamp: '10:30 AM',
+    },
+    {
+      id: '2',
+      senderName: 'You',
+      isMe: true,
+      content:
+        'Thank you so much! I would love to share my resume and capstone project for a quick 15-minute review.',
+      timestamp: '10:34 AM',
+    },
+  ])
+  const [draft, setDraft] = useState('')
 
-  useEffect(() => {
-    // In a real app, this would fetch messages from the API
-    const mockMessages = [
-      {
-        id: '1',
-        content: 'Hi! How are you doing?',
-        senderName: 'Ahmed Hassan',
-        timestamp: new Date(),
-        isRead: false,
-      },
-      {
-        id: '2',
-        content: 'Thanks for the connection!',
-        senderName: 'Usman Khan',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-        isRead: true,
-      },
-    ]
-
-    setMessages(mockMessages)
-    setLoading(false)
-  }, [conversationId])
-
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-background text-foreground p-8">
-        <div className="max-w-2xl mx-auto text-center">
-          <Loader2 className="h-6 w-6 mx-auto mb-3 animate-spin text-primary" />
-          <p className="text-secondary">Loading messages...</p>
-        </div>
-      </main>
-    )
+  const handleSend = (e: FormEvent) => {
+    e.preventDefault()
+    if (!draft.trim()) return
+    const nextMsg: SingleMessage = {
+      id: `m-${Date.now()}`,
+      senderName: 'You',
+      isMe: true,
+      content: draft.trim(),
+      timestamp: 'Just now',
+    }
+    setMessages((prev) => [...prev, nextMsg])
+    setDraft('')
+    toast.success('Message sent.')
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border/50 bg-background/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 rounded-full">UA</Avatar>
-            <span className="font-semibold text-foreground">Conversation</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <ThemeSwitcher />
-            <Button variant="ghost" size="sm" onClick={() => navigate('/messages')}>
-              Back to Messages
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
-          <div className="space-y-4">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className="flex items-start gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20"
-              >
-                <div className="w-10 h-10 rounded-full flex-shrink-0">
-                  <Avatar>UA</Avatar>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-foreground">{msg.senderName}</p>
-                  <p className="text-sm text-secondary mt-0.5">{msg.content}</p>
-                  <p className="text-xs text-secondary/80 mt-1">
-                    {new Date(msg.timestamp).toLocaleTimeString()}
-                  </p>
-                </div>
-              </div>
-            ))}
-
-            {!loading && messages.length === 0 && (
-              <div className="min-h-[200px] flex flex-col items-center justify-center py-8 text-secondary">
-                <svg
-                  className="h-8 w-8 mb-3 opacity-50"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v6a2 2 0 002 2H9a2 2 0 002-2zM5 13l7 7-7 7"
-                  />
-                </svg>
-                <p>No messages yet</p>
-              </div>
-            )}
-          </div>
-        </div>
+    <RoleShell
+      role={getActivePersona()}
+      title={`Conversation with ${partner.name}`}
+      subtitle={`${partner.headline} · ${partner.chapter}`}
+      badge="Direct Thread"
+    >
+      <div className="flex items-center justify-between">
+        <Link
+          to="/messages"
+          className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-primary hover:underline"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to All Conversations
+        </Link>
+        <Link
+          to={`/alumni/${partner.id}`}
+          className="text-xs font-mono font-semibold text-primary hover:underline"
+        >
+          View {partner.name}&apos;s Full Profile
+        </Link>
       </div>
-    </main>
+
+      <section className="rounded-2xl border border-border bg-card p-6 shadow-card space-y-5">
+        <div className="space-y-3">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex flex-col ${
+                msg.isMe ? 'items-end' : 'items-start'
+              }`}
+            >
+              <div
+                className={`max-w-xl rounded-2xl border p-4 space-y-1 ${
+                  msg.isMe
+                    ? 'border-primary/40 bg-primary/10 text-foreground'
+                    : 'border-border bg-background text-foreground'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-4 text-xs font-mono">
+                  <span className="font-bold text-primary">
+                    {msg.senderName}
+                  </span>
+                  <span className="text-secondary">{msg.timestamp}</span>
+                </div>
+                <p className="text-sm leading-relaxed">{msg.content}</p>
+                {msg.failed ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setMessages((prev) =>
+                        prev.map((m) =>
+                          m.id === msg.id ? { ...m, failed: false } : m,
+                        ),
+                      )
+                    }
+                    className="inline-flex items-center gap-1 text-xs font-mono text-primary hover:underline"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    Retry
+                  </button>
+                ) : (
+                  <div className="flex items-center justify-end gap-1 text-[10px] font-mono text-secondary">
+                    <CheckCircle2 className="h-3 w-3 text-primary" />
+                    <span>Delivered</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <form
+          onSubmit={handleSend}
+          className="pt-4 border-t border-border flex items-center gap-2.5"
+        >
+          <Input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder={`Reply to ${partner.name}...`}
+            className="flex-1"
+          />
+          <Button type="submit" disabled={!draft.trim()}>
+            <Send className="h-3.5 w-3.5 mr-1.5" />
+            Send Reply
+          </Button>
+        </form>
+      </section>
+    </RoleShell>
   )
 }

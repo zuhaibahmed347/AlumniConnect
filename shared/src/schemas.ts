@@ -1,15 +1,78 @@
 import { z } from 'zod'
 import { UserRole, UserStatus, EventStatus, JobStatus, EmploymentType, MentorshipStatus, AnnouncementPriority } from './types'
 
+export const PASSWORD_MIN_LENGTH = 8
+export const PASSWORD_MAX_LENGTH = 100
+export const PASSWORD_UPPERCASE_REGEX = /[A-Z]/
+export const PASSWORD_LOWERCASE_REGEX = /[a-z]/
+export const PASSWORD_NUMBER_REGEX = /[0-9]/
+export const PASSWORD_SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>_\-=+[\]\\;/~`']/
+
+export const strongPasswordSchema = z
+  .string()
+  .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
+  .max(PASSWORD_MAX_LENGTH, `Password must be at most ${PASSWORD_MAX_LENGTH} characters`)
+  .regex(PASSWORD_UPPERCASE_REGEX, 'Password must include at least one uppercase letter (A-Z)')
+  .regex(PASSWORD_LOWERCASE_REGEX, 'Password must include at least one lowercase letter (a-z)')
+  .regex(PASSWORD_NUMBER_REGEX, 'Password must include at least one number (0-9)')
+  .regex(
+    PASSWORD_SPECIAL_CHAR_REGEX,
+    'Password must include at least one special character (!@#$%^&*)',
+  )
+
+export interface PasswordStrengthEvaluation {
+  hasMinLength: boolean
+  hasMixedCase: boolean
+  hasNumber: boolean
+  hasSpecialChar: boolean
+  passwordsMatch: boolean
+  passedCount: number
+  totalRules: number
+  isStrong: boolean
+}
+
+export function evaluatePasswordStrength(
+  password: string,
+  confirmPassword?: string,
+): PasswordStrengthEvaluation {
+  const hasMinLength = password.length >= PASSWORD_MIN_LENGTH
+  const hasMixedCase =
+    PASSWORD_UPPERCASE_REGEX.test(password) &&
+    PASSWORD_LOWERCASE_REGEX.test(password)
+  const hasNumber = PASSWORD_NUMBER_REGEX.test(password)
+  const hasSpecialChar = PASSWORD_SPECIAL_CHAR_REGEX.test(password)
+  const hasConfirm = typeof confirmPassword === 'string'
+  const passwordsMatch = hasConfirm
+    ? hasMinLength && password === confirmPassword
+    : true
+
+  const ruleResults = hasConfirm
+    ? [hasMinLength, hasMixedCase, hasNumber, hasSpecialChar, passwordsMatch]
+    : [hasMinLength, hasMixedCase, hasNumber, hasSpecialChar]
+
+  const passedCount = ruleResults.filter(Boolean).length
+
+  return {
+    hasMinLength,
+    hasMixedCase,
+    hasNumber,
+    hasSpecialChar,
+    passwordsMatch,
+    passedCount,
+    totalRules: ruleResults.length,
+    isStrong: hasMinLength && hasMixedCase && hasNumber && hasSpecialChar,
+  }
+}
+
 export const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: strongPasswordSchema,
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
 })
 
 export const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 
 export const forgotPasswordSchema = z.object({
@@ -17,14 +80,33 @@ export const forgotPasswordSchema = z.object({
 })
 
 export const resetPasswordSchema = z.object({
-  token: z.string().min(1, 'Token is required'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  token: z.string().min(6, 'Valid recovery verification token is required'),
+  password: strongPasswordSchema,
 })
+
+export const resetPasswordConfirmSchema = resetPasswordSchema
+  .extend({
+    confirmPassword: z.string().min(1, 'Confirm your password is required'),
+  })
+  .refine((values) => values.password === values.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
 
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  newPassword: strongPasswordSchema,
 })
+
+export const changePasswordConfirmSchema = changePasswordSchema
+  .extend({
+    confirmPassword: z.string().min(1, 'Confirm your password is required'),
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+
 
 export const updateProfileSchema = z.object({
   headline: z.string().max(200).optional(),

@@ -77,10 +77,10 @@ export function FloatingHeader() {
       <motion.div
         initial={false}
         animate={{
-          maxWidth: isScrolled ? '1060px' : '1280px',
-          height: isScrolled ? 54 : 66,
+          maxWidth: isScrolled ? '1180px' : '1280px',
+          height: isScrolled ? 58 : 66,
           y: isScrolled ? 2 : 0,
-          borderRadius: isScrolled ? 18 : 14,
+          borderRadius: isScrolled ? 18 : 16,
         }}
         transition={
           prefersReducedMotion
@@ -96,10 +96,10 @@ export function FloatingHeader() {
           backdropFilter,
           WebkitBackdropFilter: backdropFilter,
         }}
-        className={`pointer-events-auto relative mx-auto flex w-full items-center justify-between gap-4 sm:gap-8 px-4 sm:px-6 transition-colors duration-300 ${
+        className={`pointer-events-auto relative mx-auto flex w-full items-center justify-between gap-3 lg:gap-6 px-3.5 sm:px-5 overflow-hidden transition-colors duration-300 ${
           isScrolled
-            ? 'bg-card/75 dark:bg-card/70 border border-border/90 ring-1 ring-white/25 dark:ring-white/10 shadow-[0_16px_40px_-12px_rgba(9,20,34,0.16)] dark:shadow-[0_20px_48px_-12px_rgba(0,0,0,0.65)]'
-            : 'bg-background/60 dark:bg-background/50 border border-border/55 ring-1 ring-white/15 dark:ring-white/5 shadow-sm'
+            ? 'bg-card/85 dark:bg-card/80 border border-border/90 ring-1 ring-white/25 dark:ring-white/10 shadow-[0_16px_40px_-12px_rgba(9,20,34,0.16)] dark:shadow-[0_20px_48px_-12px_rgba(0,0,0,0.65)]'
+            : 'bg-background/70 dark:bg-background/60 border border-border/60 ring-1 ring-white/15 dark:ring-white/5 shadow-sm'
         }`}
       >
         {/* Subtle top specular glass reflection */}
@@ -115,13 +115,13 @@ export function FloatingHeader() {
         >
           <motion.img
             animate={{
-              scale: isScrolled ? 0.9 : 1,
+              scale: isScrolled ? 0.92 : 1,
             }}
             whileHover={{ rotate: -4, scale: 1.06 }}
             transition={{ type: 'spring', stiffness: 320, damping: 22 }}
             src="/images/university-logo.jpg"
             alt="Sukkur IBA University"
-            className="h-8 w-8 rounded-lg object-cover ring-1 ring-border shadow-sm"
+            className="h-8 w-8 rounded-lg object-cover ring-1 ring-border shadow-sm shrink-0"
           />
           <motion.span
             animate={{
@@ -136,7 +136,7 @@ export function FloatingHeader() {
         {/* Zone 2: 4 concise single-line navigation links */}
         <nav
           aria-label="Primary Navigation"
-          className="hidden md:flex items-center gap-6 lg:gap-7 text-sm font-medium text-secondary"
+          className="hidden md:flex items-center gap-4 lg:gap-6 text-sm font-medium text-secondary min-w-0"
         >
           {NAV_LINKS.map((link) => {
             const isActive = activeSection === link.id
@@ -165,25 +165,25 @@ export function FloatingHeader() {
           })}
         </nav>
 
-        {/* Zone 3: Global Search, Theme Toggle & Primary Action */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Zone 3: Global Search, Theme Toggle & Primary Action (safely contained inside header border) */}
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink-0">
           <GlobalSearchTrigger compact={isScrolled} />
           <ThemeSwitcher showLabel={false} />
           <Link
             to="/login"
-            className="hidden sm:inline-block text-xs sm:text-sm font-medium text-secondary hover:text-foreground transition-colors whitespace-nowrap shrink-0"
+            className="hidden sm:inline-flex items-center px-2 py-1.5 text-xs sm:text-sm font-semibold text-secondary hover:text-foreground transition-colors whitespace-nowrap shrink-0"
           >
             Sign In
           </Link>
           <motion.div
-            animate={{ scale: isScrolled ? 0.96 : 1 }}
-            whileHover={{ y: -1.5, scale: 1.02 }}
+            whileHover={{ y: -1 }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 360, damping: 24 }}
+            className="shrink-0"
           >
             <Link
               to="/register"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 sm:px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-primary/90 transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center justify-center rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-primary/90 transition-colors whitespace-nowrap shrink-0"
             >
               Join Network
             </Link>

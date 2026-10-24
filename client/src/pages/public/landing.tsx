@@ -5,6 +5,12 @@ import { SelectField } from '@/components/ui/input'
 import { MediaImage } from '@/components/ui/media-image'
 import { TestimonialCarousel } from '@/components/ui/testimonial-carousel'
 import { AlumniWorldMap } from '@/components/ui/alumni-world-map'
+import {
+  TiltEventCard,
+  EventRsvpToggleBar,
+  useEventRsvpState,
+  type EventEngagementStatus,
+} from '@/components/ui/interactive-event-card'
 import { FloatingHeader } from '@/components/layout/floating-header'
 import {
   SUKKUR_IBA_JOB_LISTINGS,
@@ -16,6 +22,7 @@ import {
   MotionConfig,
   motion,
   AnimatePresence,
+  LayoutGroup,
   useScroll,
   useTransform,
   useSpring,
@@ -348,6 +355,7 @@ export function LandingPage() {
   const [directoryQuery, setDirectoryQuery] = useState('')
   const [eventCategory, setEventCategory] = useState<EventCategory>('all')
   const [eventChapter, setEventChapter] = useState<EventChapterFilter>('all')
+  const { rsvpMap, toggleEventStatus } = useEventRsvpState()
   const [jobSectorFilter, setJobSectorFilter] = useState<JobSector>('ALL')
   const [jobLevelFilter, setJobLevelFilter] = useState<ExperienceLevel>('ALL')
   const [jobWorkplaceFilter, setJobWorkplaceFilter] =
@@ -376,12 +384,25 @@ export function LandingPage() {
     return matchesDiscipline && matchesQuery
   })
 
-  const filteredEvents = upcomingEvents.filter((ev) => {
-    const matchesCat = eventCategory === 'all' || ev.category === eventCategory
-    const matchesChapter =
-      eventChapter === 'all' || ev.chapterHub === eventChapter
-    return matchesCat && matchesChapter
-  })
+  const rsvpSortWeight = (status: EventEngagementStatus) => {
+    if (status === 'ATTENDING') return 2
+    if (status === 'INTERESTED') return 1
+    return 0
+  }
+
+  const filteredEvents = upcomingEvents
+    .filter((ev) => {
+      const matchesCat = eventCategory === 'all' || ev.category === eventCategory
+      const matchesChapter =
+        eventChapter === 'all' || ev.chapterHub === eventChapter
+      return matchesCat && matchesChapter
+    })
+    .sort((a, b) => {
+      return (
+        rsvpSortWeight(rsvpMap[b.id] || 'NONE') -
+        rsvpSortWeight(rsvpMap[a.id] || 'NONE')
+      )
+    })
 
   const currentRegionStats = regionalImpactStats[regionScope]
   const prefersReducedMotion = useReducedMotion()
@@ -1724,67 +1745,109 @@ export function LandingPage() {
                 </div>
               </div>
 
-              {/* Events Grid with Generous Margins & Card Spacing */}
+              {/* Events Grid with Framer Motion Layout Animations & 3D Tilt Hover */}
               {filteredEvents.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
-                  <AnimatePresence mode="popLayout">
-                    {filteredEvents.map((ev) => (
-                      <motion.article
-                        key={ev.id}
-                        layout
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.98 }}
-                        whileHover={hoverLift}
-                        transition={{ duration: 0.3, ease: EASE }}
-                        className="group rounded-2xl border border-border bg-card overflow-hidden flex flex-col justify-between shadow-card transition-shadow"
-                      >
-                        <div>
-                          <MediaImage
-                            src={ev.image}
-                            alt={ev.title}
-                            className="aspect-[16/9] w-full rounded-none"
-                            imgClassName="object-cover object-center group-hover:scale-[1.03] transition-transform duration-500 ease-out-expo"
-                          />
-                          <div className="p-7 sm:p-8">
-                            {/* Unboxed metadata with typographic separators */}
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-secondary mb-3 font-mono tabular-nums">
-                              <span className="text-primary font-semibold">
-                                {ev.categoryLabel}
-                              </span>
-                              <span aria-hidden="true">·</span>
-                              <span>{ev.date}</span>
-                              <span aria-hidden="true">·</span>
-                              <span>{ev.attending}</span>
-                            </div>
+                <LayoutGroup id="landing-events-grid">
+                  <motion.div
+                    layout
+                    className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10"
+                  >
+                    <AnimatePresence mode="popLayout">
+                      {filteredEvents.map((ev) => {
+                        const rsvpStatus = rsvpMap[ev.id] || 'NONE'
+                        return (
+                          <TiltEventCard
+                            key={ev.id}
+                            engagementStatus={rsvpStatus}
+                          >
+                            <motion.div layout="position">
+                              <div className="relative">
+                                <MediaImage
+                                  src={ev.image}
+                                  alt={ev.title}
+                                  className="aspect-[16/9] w-full rounded-none"
+                                  imgClassName="object-cover object-center group-hover:scale-[1.03] transition-transform duration-500 ease-out-expo"
+                                />
+                                {rsvpStatus !== 'NONE' && (
+                                  <motion.div
+                                    layout
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    className={`absolute top-3.5 right-3.5 px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold shadow-md backdrop-blur-md ${
+                                      rsvpStatus === 'ATTENDING'
+                                        ? 'bg-[#0D6E5B]/95 text-white border border-[#2DD4BF]/40'
+                                        : 'bg-[#091422]/90 text-[#F59E0B] border border-[#F59E0B]/40'
+                                    }`}
+                                  >
+                                    {rsvpStatus === 'ATTENDING'
+                                      ? '✓ Attending'
+                                      : '★ Interested'}
+                                  </motion.div>
+                                )}
+                              </div>
 
-                            <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground mb-3 leading-snug group-hover:text-primary transition-colors">
-                              {ev.title}
-                            </h3>
-                            <p className="text-sm sm:text-[15px] text-secondary leading-relaxed">
-                              {ev.description}
-                            </p>
-                          </div>
-                        </div>
+                              <motion.div layout className="p-7 sm:p-8">
+                                {/* Unboxed metadata with typographic separators */}
+                                <motion.div
+                                  layout="position"
+                                  className="flex flex-wrap items-center gap-2 text-xs text-secondary mb-3 font-mono tabular-nums"
+                                >
+                                  <span className="text-primary dark:text-[#2DD4BF] font-semibold">
+                                    {ev.categoryLabel}
+                                  </span>
+                                  <span aria-hidden="true">·</span>
+                                  <span>{ev.date}</span>
+                                  <span aria-hidden="true">·</span>
+                                  <span>{ev.attending}</span>
+                                </motion.div>
 
-                        <div className="px-7 sm:px-8 py-4 border-t border-border bg-stone/35 flex items-center justify-between gap-4 text-xs sm:text-sm">
-                          <span className="text-secondary flex items-center gap-2 truncate font-medium">
-                            <MapPin className="h-4 w-4 text-primary shrink-0" />
-                            <span className="truncate">{ev.location}</span>
-                          </span>
-                          <motion.div whileHover={{ x: 3 }}>
-                            <Link
-                              to={`/events/${ev.id}`}
-                              className="font-semibold text-primary hover:underline whitespace-nowrap shrink-0 ml-4"
+                                <motion.h3
+                                  layout="position"
+                                  className="font-display text-xl sm:text-2xl font-bold text-foreground mb-3 leading-snug group-hover:text-primary dark:group-hover:text-[#2DD4BF] transition-colors"
+                                >
+                                  {ev.title}
+                                </motion.h3>
+                                <motion.p
+                                  layout="position"
+                                  className="text-sm sm:text-[15px] text-secondary leading-relaxed mb-5"
+                                >
+                                  {ev.description}
+                                </motion.p>
+
+                                {/* Interactive Interested / Attending Toggle with Framer Motion layout animations */}
+                                <EventRsvpToggleBar
+                                  eventId={ev.id}
+                                  eventTitle={ev.title}
+                                  status={rsvpStatus}
+                                  onToggle={toggleEventStatus}
+                                />
+                              </motion.div>
+                            </motion.div>
+
+                            <motion.div
+                              layout
+                              className="px-7 sm:px-8 py-4 border-t border-border bg-stone/35 flex items-center justify-between gap-4 text-xs sm:text-sm"
                             >
-                              Reserve Seat →
-                            </Link>
-                          </motion.div>
-                        </div>
-                      </motion.article>
-                    ))}
-                  </AnimatePresence>
-                </div>
+                              <span className="text-secondary flex items-center gap-2 truncate font-medium">
+                                <MapPin className="h-4 w-4 text-primary dark:text-[#2DD4BF] shrink-0" />
+                                <span className="truncate">{ev.location}</span>
+                              </span>
+                              <motion.div whileHover={{ x: 3 }}>
+                                <Link
+                                  to={`/events/${ev.id}`}
+                                  className="font-semibold text-primary dark:text-[#2DD4BF] hover:underline whitespace-nowrap shrink-0 ml-4"
+                                >
+                                  Reserve Seat →
+                                </Link>
+                              </motion.div>
+                            </motion.div>
+                          </TiltEventCard>
+                        )
+                      })}
+                    </AnimatePresence>
+                  </motion.div>
+                </LayoutGroup>
               ) : (
                 <div className="rounded-2xl border border-border bg-card p-10 text-center">
                   <p className="text-sm font-medium text-secondary mb-3">

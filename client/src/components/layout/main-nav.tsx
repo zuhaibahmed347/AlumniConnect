@@ -46,10 +46,10 @@ export function MainNav() {
       <motion.div
         initial={false}
         animate={{
-          maxWidth: isScrolled ? '1060px' : '1280px',
-          height: isScrolled ? 54 : 64,
+          maxWidth: isScrolled ? '1180px' : '1280px',
+          height: isScrolled ? 58 : 64,
           y: isScrolled ? 2 : 0,
-          borderRadius: isScrolled ? 18 : 14,
+          borderRadius: isScrolled ? 18 : 16,
         }}
         transition={
           prefersReducedMotion
@@ -65,10 +65,10 @@ export function MainNav() {
           backdropFilter,
           WebkitBackdropFilter: backdropFilter,
         }}
-        className={`pointer-events-auto relative mx-auto flex w-full items-center justify-between gap-4 sm:gap-8 px-4 sm:px-6 transition-colors duration-300 ${
+        className={`pointer-events-auto relative mx-auto flex w-full items-center justify-between gap-3 lg:gap-6 px-3.5 sm:px-5 overflow-hidden transition-colors duration-300 ${
           isScrolled
-            ? 'bg-card/75 dark:bg-card/70 border border-border/90 ring-1 ring-white/25 dark:ring-white/10 shadow-[0_16px_40px_-12px_rgba(9,20,34,0.16)] dark:shadow-[0_20px_48px_-12px_rgba(0,0,0,0.65)]'
-            : 'bg-background/65 dark:bg-background/55 border border-border/55 ring-1 ring-white/15 dark:ring-white/5 shadow-sm'
+            ? 'bg-card/85 dark:bg-card/80 border border-border/90 ring-1 ring-white/25 dark:ring-white/10 shadow-[0_16px_40px_-12px_rgba(9,20,34,0.16)] dark:shadow-[0_20px_48px_-12px_rgba(0,0,0,0.65)]'
+            : 'bg-background/70 dark:bg-background/60 border border-border/60 ring-1 ring-white/15 dark:ring-white/5 shadow-sm'
         }`}
       >
         {/* Top specular glass reflection */}
@@ -83,12 +83,12 @@ export function MainNav() {
           className="flex items-center gap-2.5 font-display font-bold tracking-tight text-foreground whitespace-nowrap shrink-0"
         >
           <motion.img
-            animate={{ scale: isScrolled ? 0.9 : 1 }}
+            animate={{ scale: isScrolled ? 0.92 : 1 }}
             whileHover={{ rotate: -4, scale: 1.06 }}
             transition={{ type: 'spring', stiffness: 320, damping: 22 }}
             src="/images/university-logo.jpg"
             alt="Sukkur IBA University"
-            className="h-8 w-8 rounded-lg object-cover ring-1 ring-border shadow-sm"
+            className="h-8 w-8 rounded-lg object-cover ring-1 ring-border shadow-sm shrink-0"
           />
           <motion.span
             animate={{ fontSize: isScrolled ? '1.02rem' : '1.125rem' }}
@@ -101,7 +101,7 @@ export function MainNav() {
         {/* Zone 2: Desktop Nav Links */}
         <nav
           aria-label="Member Navigation"
-          className="hidden md:flex items-center gap-6 lg:gap-7 text-sm font-medium text-secondary"
+          className="hidden md:flex items-center gap-4 lg:gap-6 text-sm font-medium text-secondary min-w-0"
         >
           {MEMBER_LINKS.map((link) => {
             const isActive = location.pathname === link.to
@@ -110,6 +110,7 @@ export function MainNav() {
                 key={link.to}
                 whileHover={{ y: -1.5 }}
                 transition={{ type: 'spring', stiffness: 340, damping: 24 }}
+                className="shrink-0"
               >
                 <Link
                   to={link.to}
@@ -134,10 +135,10 @@ export function MainNav() {
         </nav>
 
         {/* Zone 3: Global Search, Theme Switcher, User Menu & Mobile Toggle */}
-        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 shrink-0">
           <GlobalSearchTrigger compact={isScrolled} />
-          <ThemeSwitcher />
-          <Link to="/profile" aria-label="Your profile">
+          <ThemeSwitcher showLabel={false} />
+          <Link to="/profile" aria-label="Your profile" className="shrink-0">
             <Avatar className="h-8 w-8 ring-1 ring-border">
               <AvatarImage src="/images/avatar.jpg" alt="Your profile" />
               <AvatarFallback>UA</AvatarFallback>
@@ -147,13 +148,13 @@ export function MainNav() {
             variant="outline"
             size="sm"
             onClick={() => navigate('/login')}
-            className="hidden sm:inline-flex"
+            className="hidden sm:inline-flex shrink-0"
           >
             Sign Out
           </Button>
           <button
             type="button"
-            className="md:hidden p-2 rounded-lg hover:bg-stone"
+            className="md:hidden p-2 rounded-lg hover:bg-stone shrink-0"
             aria-label="Open main menu"
           >
             <Menu className="h-5 w-5" />

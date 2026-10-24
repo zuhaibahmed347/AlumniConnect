@@ -10,8 +10,8 @@
   :root,
   [data-theme="light"] {
     color-scheme: light;
-    --font-sans: 'Plus Jakarta Sans', 'Manrope Variable', 'Manrope', 'Inter Variable', 'Inter', system-ui, sans-serif;
-    --font-heading: 'Fraunces', 'Plus Jakarta Sans', 'Manrope Variable', Georgia, serif;
+    --font-sans: 'Inter Variable', 'Inter', 'Manrope Variable', 'Manrope', system-ui, -apple-system, sans-serif;
+    --font-heading: 'Fraunces', 'Manrope Variable', 'Inter Variable', Georgia, serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
     /* RGB channel triplets for Tailwind <alpha-value> utilities */
@@ -22,13 +22,13 @@
     --color-stone: 242 239 233;             /* #F2EFE9 Warm Sand / Secondary Surface */
     --color-primary: 13 110 91;             /* #0D6E5B Meridian Emerald */
     --color-primary-foreground: 255 255 255;/* #FFFFFF */
-    --color-secondary: 71 85 105;           /* #475569 High-Contrast Slate Text */
+    --color-secondary: 45 58 75;            /* #2D3A4B High-Contrast Readable Slate Text */
     --color-secondary-foreground: 255 255 255;
     --color-gold: 217 119 6;                /* #D97706 Burnished Amber Gold */
     --color-accent: 230 244 241;            /* #E6F4F1 Soft Emerald Tint */
     --color-accent-foreground: 13 110 91;   /* #0D6E5B */
     --color-muted: 242 239 233;             /* #F2EFE9 */
-    --color-muted-foreground: 71 85 105;    /* #475569 */
+    --color-muted-foreground: 45 58 75;     /* #2D3A4B */
     --color-destructive: 185 28 28;         /* #B91C1C */
     --color-border: 218 213 203;            /* #DAD5CB Warm Defined Hairline */
     --color-input: 218 213 203;             /* #DAD5CB */
@@ -46,7 +46,7 @@
     --secondary: oklch(0.955 0.008 82);
     --secondary-foreground: oklch(0.19 0.02 240);
     --muted: oklch(0.955 0.008 82);
-    --muted-foreground: oklch(0.45 0.02 240);
+    --muted-foreground: oklch(0.38 0.02 240);
     --accent: oklch(0.94 0.025 172);
     --accent-foreground: oklch(0.47 0.095 172);
     --destructive: oklch(0.52 0.2 27);
@@ -84,13 +84,13 @@
     --color-stone: 26 47 76;                /* #1A2F4C Deep Meridian Secondary Surface */
     --color-primary: 20 184 138;            /* #14B88A Luminous Meridian Emerald */
     --color-primary-foreground: 255 255 255;/* #FFFFFF Crisp White on Primary Buttons */
-    --color-secondary: 194 208 226;         /* #C2D0E2 High-Legibility Silver-Slate Text */
+    --color-secondary: 214 225 240;         /* #D6E1F0 High-Legibility Silver-Slate Text */
     --color-secondary-foreground: 9 20 34;  /* #091422 */
     --color-gold: 251 191 36;               /* #FBBF24 Luminous Amber Gold */
     --color-accent: 21 54 64;               /* #153640 Deep Emerald Surface Tint */
     --color-accent-foreground: 45 212 191;  /* #2DD4BF */
     --color-muted: 26 47 76;                /* #1A2F4C */
-    --color-muted-foreground: 194 208 226;  /* #C2D0E2 */
+    --color-muted-foreground: 214 225 240;  /* #D6E1F0 */
     --color-destructive: 248 113 113;       /* #F87171 */
     --color-border: 45 72 107;              /* #2D486B Clearly Visible Slate Border */
     --color-input: 45 72 107;               /* #2D486B */
@@ -108,7 +108,7 @@
     --secondary: oklch(0.29 0.042 245);
     --secondary-foreground: oklch(0.98 0.005 240);
     --muted: oklch(0.29 0.042 245);
-    --muted-foreground: oklch(0.84 0.025 240);
+    --muted-foreground: oklch(0.86 0.025 240);
     --accent: oklch(0.31 0.045 190);
     --accent-foreground: oklch(0.85 0.12 175);
     --destructive: oklch(0.68 0.20 25);
@@ -139,6 +139,7 @@
   body {
     @apply font-sans antialiased bg-background text-foreground selection:bg-primary/20 selection:text-primary;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    line-height: 1.6;
   }
 
   h1, h2, h3, h4, .font-display {
@@ -146,13 +147,39 @@
     font-optical-sizing: auto;
   }
 
+  /* Global Card Description Readability Enhancement:
+     Ensure all descriptive text inside cards & articles uses clean, legible Inter sans-serif,
+     comfortable line-height (1.68), and boosted contrast so blocks of text are effortless to read. */
+  article p:not(.font-mono),
+  .bg-card p:not(.font-mono),
+  .bg-background p:not(.font-mono) {
+    font-family: var(--font-sans);
+    letter-spacing: -0.004em;
+    line-height: 1.65;
+  }
+
+  article p.text-xs.text-secondary:not(.font-mono),
+  .bg-card p.text-xs.text-secondary:not(.font-mono),
+  .bg-background p.text-xs.text-secondary:not(.font-mono) {
+    font-size: 0.85rem;
+    line-height: 1.65;
+    font-weight: 430;
+  }
+
   /* Universal Dark/Light Mode Visibility Guarantee for Form Fields & Dropdowns */
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([data-slot="search-input"]),
   select,
   textarea {
     background-color: rgb(var(--color-card));
     color: rgb(var(--color-foreground));
     border-color: rgb(var(--color-border));
+  }
+
+  input[data-slot="search-input"] {
+    background-color: transparent !important;
+    border-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
   }
 
   input::placeholder,
@@ -193,8 +220,8 @@
     color: #F87171 !important;
   }
 
-  /* Consistent, visible keyboard focus everywhere. */
-  :focus-visible {
+  /* Consistent, visible keyboard focus everywhere except bare composite search inputs whose parent wrapper handles focus styling. */
+  :focus-visible:not([data-slot="search-input"]) {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 
@@ -211,8 +238,8 @@
   }
 
   .theme {
-    --font-heading: 'Fraunces', 'Plus Jakarta Sans', 'Manrope Variable', Georgia, serif;
-    --font-sans: 'Plus Jakarta Sans', 'Manrope Variable', 'Manrope', system-ui, sans-serif;
+    --font-heading: 'Fraunces', 'Manrope Variable', 'Inter Variable', Georgia, serif;
+    --font-sans: 'Inter Variable', 'Inter', 'Manrope Variable', 'Manrope', system-ui, sans-serif;
   }
 
   * {
@@ -224,6 +251,15 @@
   /* Shared page container for consistent gutters and max width (1440px desktop presence). */
   .page-container {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Standardized high-readability description text for cards and profiles */
+  .card-description {
+    font-family: var(--font-sans);
+    font-size: 0.925rem;
+    line-height: 1.7;
+    letter-spacing: -0.005em;
+    color: rgb(var(--color-foreground) / 0.86);
   }
 
   /* Skeleton loading shimmer used by loading states. */

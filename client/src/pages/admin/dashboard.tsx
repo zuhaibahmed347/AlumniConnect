@@ -1,370 +1,463 @@
-import { Bell } from 'lucide-react'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { RoleShell } from '@/components/layout/role-shell'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { CampusNewsTicker } from '@/components/ui/campus-news-ticker'
-import { Users, Calendar, TrendingUp, MessageCircle, Zap, Layout, Settings, LogOut, BarChart3 } from 'lucide-react'
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { motion, Variants } from 'framer-motion'
+import {
+  MENTORS_CATALOG,
+  loadMentorshipRequests,
+} from '@/lib/mentorship-data'
+import {
+  ALUMNI_DETAILED_CATALOG,
+  loadEmployerJobs,
+  loadJobApplications,
+} from '@/lib/role-context'
+import { toast } from '@/lib/toast'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  ArrowUpRight,
+  BarChart3,
+  Briefcase,
+  Calendar,
+  CheckCircle2,
+  Compass,
+  Settings,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+  UserCheck,
+  Users,
+  XCircle,
+} from 'lucide-react'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+
+interface ModerationQueueItem {
+  id: string
+  category: 'USER_VERIFICATION' | 'EMPLOYER_APPROVAL' | 'JOB_MODERATION' | 'EVENT_REVIEW'
+  title: string
+  submittedBy: string
+  submittedAt: string
+  detail: string
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'
+}
 
 export function AdminDashboardPage() {
   const navigate = useNavigate()
 
-  useEffect(() => {
-    // In a real app, this would check admin authentication
-    const token = localStorage.getItem('accessToken')
-    if (!token) {
-      navigate('/login')
-    }
-  }, [navigate])
+  const mentorshipRequests = loadMentorshipRequests()
+  const employerJobs = loadEmployerJobs()
+  const applications = loadJobApplications()
 
-  // Stat card variants
-  const statCardVariants: Variants = {
-    hidden: { opacity: 0, y: 20, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        type: 'spring',
-        stiffness: 200,
-        damping: 25,
-        delay: 0.1,
+  const [moderationQueue, setModerationQueue] = useState<ModerationQueueItem[]>(
+    [
+      {
+        id: 'mod-1',
+        category: 'USER_VERIFICATION',
+        title: 'Alumni Degree Verification — Saba Ahmed (BBA ’19)',
+        submittedBy: 'saba.ahmed@iba-suk.edu.pk',
+        submittedAt: '2 hours ago',
+        detail: 'Transcript & Registrar Roll #SIBA-2015-0842 matched against convocation ledger.',
+        status: 'PENDING',
       },
+      {
+        id: 'mod-2',
+        category: 'EMPLOYER_APPROVAL',
+        title: 'Employer Partner Request — Menapay Ventures',
+        submittedBy: 'Sanaullah Memon (VP Product · Dubai Chapter)',
+        submittedAt: '5 hours ago',
+        detail: 'Requesting recruiter posting privileges for Summer 2026 FinTech Fellowship.',
+        status: 'PENDING',
+      },
+      {
+        id: 'mod-3',
+        category: 'JOB_MODERATION',
+        title: 'Job Posting Review — Graduate Software Engineer (TechCorp)',
+        submittedBy: 'Engr. Tariq Mahmood (BSCS ’15)',
+        submittedAt: 'Yesterday',
+        detail: 'Verified compensation band (PKR 240k–320k/mo) and Sukkur/Karachi hybrid hub.',
+        status: 'PENDING',
+      },
+    ],
+  )
+
+  const [confirmingItem, setConfirmingItem] = useState<{
+    item: ModerationQueueItem
+    decision: 'APPROVED' | 'REJECTED'
+  } | null>(null)
+  const [moderationReason, setModerationReason] = useState('')
+
+  const [auditLogs, setAuditLogs] = useState([
+    {
+      id: 'log-1',
+      actor: 'Usman Khan (SUPER_ADMIN)',
+      action: 'Verified Alumni Batch 2020 Registrar CSV (48 records)',
+      time: 'Today · 11:20 PKT',
     },
+    {
+      id: 'log-2',
+      actor: 'Dr. Sarah Khan (MENTORSHIP_MANAGER)',
+      action: 'Published Cohort IX Systems Engineering Track syllabus',
+      time: 'Yesterday · 18:45 PKT',
+    },
+    {
+      id: 'log-3',
+      actor: 'System Security Monitor',
+      action: 'Enforced RBAC permissions matrix across 6 institutional roles',
+      time: 'Oct 20, 2026',
+    },
+  ])
+
+  const handleConfirmModeration = () => {
+    if (!confirmingItem) return
+    const { item, decision } = confirmingItem
+    setModerationQueue((prev) =>
+      prev.map((q) => (q.id === item.id ? { ...q, status: decision } : q)),
+    )
+    setAuditLogs((prev) => [
+      {
+        id: `log-${Date.now()}`,
+        actor: 'Usman Khan (ADMIN)',
+        action: `${decision}: ${item.title}${
+          moderationReason.trim() ? ` — Reason: ${moderationReason.trim()}` : ''
+        }`,
+        time: 'Just now',
+      },
+      ...prev,
+    ])
+    setConfirmingItem(null)
+    setModerationReason('')
+    toast({
+      title:
+        decision === 'APPROVED'
+          ? 'Verification / Moderation Approved'
+          : 'Submission Rejected',
+      description: `${item.title} marked as ${decision} and recorded in the institutional audit log.`,
+      variant: decision === 'APPROVED' ? 'success' : 'default',
+    })
   }
 
-  // Activity item variants
-  const activityVariants: Variants = {
-    hidden: { opacity: 0, x: -12 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: {
-        type: 'spring',
-        stiffness: 200,
-        damping: 25,
-        delay: 0.1,
-      },
+  const pendingQueue = moderationQueue.filter((q) => q.status === 'PENDING')
+
+  const kpiCards = [
+    {
+      label: 'Total Platform Users',
+      value: '5,420',
+      sub: '3,840 Alumni · 1,490 Students · 90 Staff',
+      to: '/admin/users',
     },
-  }
+    {
+      label: 'Verified Alumni & Students',
+      value: `${ALUMNI_DETAILED_CATALOG.length} Featured`,
+      sub: '94.2% Registrar-verified accounts',
+      to: '/admin/users',
+    },
+    {
+      label: 'Active Guild Mentors',
+      value: `${MENTORS_CATALOG.length} Chairs`,
+      sub: `${mentorshipRequests.length} tracked mentorship pairings`,
+      to: '/admin/mentorship',
+    },
+    {
+      label: 'Employers & Job Postings',
+      value: `${employerJobs.length} Active`,
+      sub: `${applications.length} candidate applications tracked`,
+      to: '/admin/jobs',
+    },
+  ]
+
+  const managementShortcuts = [
+    {
+      title: 'User & Verification Management',
+      desc: 'Search alumni & students, verify degrees, and manage account statuses.',
+      to: '/admin/users',
+      icon: Users,
+    },
+    {
+      title: 'Roles & Permissions Matrix',
+      desc: 'Inspect RBAC hierarchy across Super Admin, Admin, Moderator, and Member.',
+      to: '/admin/roles',
+      icon: Sparkles,
+    },
+    {
+      title: 'Event Administration',
+      desc: 'Create, publish, and archive campus reunions, workshops, and webinars.',
+      to: '/admin/events',
+      icon: Calendar,
+    },
+    {
+      title: 'Job & Employer Moderation',
+      desc: 'Review employer postings, verify organizations, and audit referrals.',
+      to: '/admin/jobs',
+      icon: Briefcase,
+    },
+    {
+      title: 'Mentorship Oversight',
+      desc: 'Monitor mentor-mentee pairings, cohort capacity, and reported issues.',
+      to: '/admin/mentorship',
+      icon: Compass,
+    },
+    {
+      title: 'Analytics & Institutional Reports',
+      desc: 'Cohort growth, placement velocity, and regional chapter engagement.',
+      to: '/admin/analytics',
+      icon: BarChart3,
+    },
+    {
+      title: 'Platform Settings & Audit',
+      desc: 'Configure registration policies, verification rules, and security.',
+      to: '/admin/settings',
+      icon: Settings,
+    },
+    {
+      title: 'Administrator Profile & Security',
+      desc: 'Manage admin credentials, active sessions, and access logs.',
+      to: '/admin/profile',
+      icon: UserCheck,
+    },
+  ]
 
   return (
-    <main className="min-h-screen bg-background">
-      {/* Sidebar */}
-      <aside className="w-64 bg-sidebar h-screen border-r border-border/50 flex flex-col">
-        <div className="p-4 border-b border-border/50">
-          <img
-            src="/images/university-logo.jpg"
-            alt="Sukkur IBA University"
-            className="h-8 w-8 rounded-lg object-cover"
-          />
-          <span className="text-xl font-bold ml-3">Admin</span>
-        </div>
-        <nav className="flex-1 p-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Dashboard"
-            className="flex items-center justify-center w-10 h-10 rounded-md hover:bg-primary/10"
-          >
-            <Layout className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Users"
-            className="flex items-center justify-center w-10 h-10 rounded-md hover:bg-primary/10"
-          >
-            <Users className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Events"
-            className="flex items-center justify-center w-10 h-10 rounded-md hover:bg-primary/10"
-          >
-            <Calendar className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Jobs"
-            className="flex items-center justify-center w-10 h-10 rounded-md hover:bg-primary/10"
-          >
-            <Zap className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Mentorship"
-            className="flex items-center justify-center w-10 h-10 rounded-md hover:bg-primary/10"
-          >
-            <MessageCircle className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Analytics"
-            className="flex items-center justify-center w-10 h-10 rounded-md hover:bg-primary/10"
-          >
-            <TrendingUp className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Settings"
-            className="flex items-center justify-center w-10 h-10 rounded-md hover:bg-primary/10"
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Sign Out"
-            className="flex items-center justify-center w-10 h-10 rounded-md hover:bg-error/10"
-          >
-            <LogOut className="h-5 w-5" />
-          </Button>
-        </nav>
-      </aside>
+    <RoleShell
+      role="ADMIN"
+      title="Institutional Administration Portal"
+      subtitle="Sukkur IBA University · Office of Alumni Relations & Career Governance"
+      badge="Role: SUPER_ADMIN"
+      headerActions={
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => navigate('/admin/command-center')}
+        >
+          Command Center View
+        </Button>
+      }
+    >
+      {/* Live Campus News & Institutional Telemetry */}
+      <CampusNewsTicker />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Top Navigation */}
-        <header className="border-b border-border/50 bg-background/80 backdrop-blur-md px-6 py-3">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold tracking-tight">Dashboard</h1>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Notifications"
-                className="relative"
-              >
-                <Bell className="h-5 w-5 text-secondary" />
-                <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-primary"></span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Profile"
-                className="relative"
-              >
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src="/images/avatar.jpg" alt="Your profile" />
-                  <AvatarFallback>UA</AvatarFallback>
-                </Avatar>
-              </Button>
+      {/* 1. Executive KPI Grid */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {kpiCards.map((card) => (
+          <Link
+            key={card.label}
+            to={card.to}
+            className="rounded-2xl border border-border bg-card p-5 shadow-card hover:border-primary/50 transition-colors block"
+          >
+            <div className="flex items-center justify-between text-xs font-mono text-primary font-semibold">
+              <span>{card.label}</span>
+              <ArrowUpRight className="h-3.5 w-3.5" />
             </div>
-          </div>
-        </header>
+            <p className="font-mono text-2xl sm:text-3xl font-bold text-foreground mt-2 tabular-nums">
+              {card.value}
+            </p>
+            <p className="text-xs text-secondary mt-1">{card.sub}</p>
+          </Link>
+        ))}
+      </section>
 
-        {/* Live Google Search Grounded Campus News Ticker */}
-        <div className="px-6 pt-6">
-          <CampusNewsTicker />
+      {/* 2. Pending Verification & Moderation Queue + Audit Log */}
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-7 rounded-2xl border border-border bg-card p-6 shadow-card space-y-4">
+          <div className="flex items-center justify-between border-b border-border pb-4">
+            <div>
+              <p className="text-xs font-mono uppercase tracking-wider font-semibold text-primary flex items-center gap-1.5">
+                <ShieldAlert className="h-3.5 w-3.5" />
+                Governance & Verification Queue
+              </p>
+              <h2 className="font-display text-xl font-bold text-foreground">
+                Pending Moderation Tasks ({pendingQueue.length})
+              </h2>
+            </div>
+            <Link
+              to="/admin/users"
+              className="text-xs font-mono font-semibold text-primary hover:underline"
+            >
+              Open Full User Table
+            </Link>
+          </div>
+
+          {pendingQueue.length === 0 ? (
+            <div className="rounded-xl border border-border bg-background p-6 text-center space-y-2">
+              <ShieldCheck className="h-6 w-6 text-primary mx-auto" />
+              <p className="text-sm font-semibold text-foreground">
+                All pending verification and moderation tasks are complete
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {pendingQueue.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-xl border border-border bg-background p-4 space-y-2.5"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                    <span className="font-bold text-primary">
+                      {item.category.replace('_', ' ')}
+                    </span>
+                    <span className="text-secondary">{item.submittedAt}</span>
+                  </div>
+                  <h3 className="font-display text-base font-bold text-foreground">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs text-secondary">
+                    Submitted by <strong className="text-foreground">{item.submittedBy}</strong> —{' '}
+                    {item.detail}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        setConfirmingItem({ item, decision: 'APPROVED' })
+                      }
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setConfirmingItem({ item, decision: 'REJECTED' })
+                      }
+                    >
+                      <XCircle className="h-3.5 w-3.5 mr-1.5" />
+                      Reject with Reason
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Stats Cards */}
-        <section className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {/* Total Users */}
-          <motion.div
-            className="p-4 rounded-lg border bg-card/50"
-            variants={statCardVariants}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-          >
-            <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center mb-3">
-              <svg className="h-3 w-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2v-6a2 2 0 00-2-2h2a2 2 0 002 2zm0 0V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7.98m4 0c3.314 0 6 1.686 6 3.5V19a2 2 0 01-2 2h-2m0-12C7 4 3 8 3 12s4 8 3 12m0-12a8 8 0 100 16 8 8 0 000-16z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">1,247</p>
-              <p className="text-sm text-secondary">Total Users</p>
-            </div>
-          </motion.div>
-
-          {/* Active Members */}
-          <motion.div
-            className="p-4 rounded-lg border bg-card/50"
-            variants={statCardVariants}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            style={{ transitionDelay: '0.1' as const }}
-          >
-            <div className="h-6 w-6 rounded-md bg-success/10 flex items-center justify-center mb-3">
-              <svg className="h-3 w-3 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v6a2 2 0 002 2H9a2 2 0 002-2zM5 13l7 7-7 7" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">987</p>
-              <p className="text-sm text-secondary">Active Members</p>
-            </div>
-          </motion.div>
-
-          {/* Pending Verification */}
-          <motion.div
-            className="p-4 rounded-lg border bg-warning/10 flex items-center justify-center"
-            variants={statCardVariants}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            style={{ transitionDelay: '0.15' as const }}
-          >
-            <div className="h-6 w-6 rounded-md bg-warning flex items-center justify-center mb-3">
-              <svg className="h-3 w-3 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 4v2a6 6 0 006 6h2a2 2 0 002-2v-6a2 2 0 00-2-2h-2a2 2 0 00-2 2v-2m0 4a2 2 0 110-4h4" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">123</p>
-              <p className="text-sm text-secondary">Pending Verification</p>
-            </div>
-          </motion.div>
-
-          {/* Active Events */}
-          <motion.div
-            className="p-4 rounded-lg border bg-primary/10 flex items-center justify-center"
-            variants={statCardVariants}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            style={{ transitionDelay: '0.2' as const }}
-          >
-            <div className="h-6 w-6 rounded-md bg-primary flex items-center justify-center mb-3">
-              <svg className="h-3 w-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v6a2 2 0 002 2H9a2 2 0 002-2zM5 13l7 7-7 7" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">45</p>
-              <p className="text-sm text-secondary">Active Events</p>
-            </div>
-          </motion.div>
-        </section>
-
-        {/* Recent Activity */}
-        <motion.section
-          className="p-6 rounded-lg border bg-card/50 mb-6"
-          variants={activityVariants}
-          initial="hidden"
-          animate="visible"
-          exit="hidden"
-        >
-          <h2 className="text-lg font-medium mb-3">Recent Activity</h2>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
-            {/* Activity items */}
-            <div className="flex items-start gap-3 py-2 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
-              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <svg className="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v6a2 2 0 002 2H9a2 2 0 002-2zM5 13l7 7-7 7" />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium">New user registered</p>
-                <p className="text-xs text-secondary/70">Ahmed Hassan joined the community</p>
-              </div>
-              <p className="text-xs text-secondary/60">Just now</p>
-            </div>
-            <div className="flex items-start gap-3 py-2 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
-              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <svg className="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v6a2 2 0 002 2H9a2 2 0 002-2zM5 13l7 7-7 7" />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium">Event created</p>
-                <p className="text-xs text-secondary/70">New alumni event posted</p>
-              </div>
-              <p className="text-xs text-secondary/60">2 hours ago</p>
-            </div>
-            <div className="flex items-start gap-3 py-2 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer">
-              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <svg className="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v6a2 2 0 002 2H9a2 2 0 002-2zM5 13l7 7-7 7" />
-                </svg>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium">Job posted</p>
-                <p className="text-xs text-secondary/70">Software Engineer position</p>
-              </div>
-              <p className="text-xs text-secondary/60">Yesterday</p>
-            </div>
+        {/* Right 5 Cols: Recent Administrative Audit Activity */}
+        <div className="lg:col-span-5 rounded-2xl border border-border bg-card p-6 shadow-card space-y-4">
+          <div className="border-b border-border pb-4">
+            <p className="text-xs font-mono uppercase tracking-wider font-semibold text-primary">
+              Immutable Audit Trail
+            </p>
+            <h2 className="font-display text-xl font-bold text-foreground">
+              Recent Administrative Activity
+            </h2>
           </div>
-        </motion.section>
 
-        {/* Quick Links */}
-        <motion.section
-          className="p-6 rounded-lg border bg-card/50"
-          variants={statCardVariants}
-          initial="hidden"
-          animate="visible"
-          exit="hidden"
-          style={{ transitionDelay: '0.3' as const }}
-        >
-          <h2 className="text-lg font-medium mb-3">Quick Links</h2>
           <div className="space-y-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-            >
-              <span className="flex items-center gap-2">
-                <Users className="h-4 w-4" /> User Management
-              </span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-            >
-              <span className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" /> Event Administration
-              </span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-            >
-              <span className="flex items-center gap-2">
-                <Zap className="h-4 w-4" /> Job Administration
-              </span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-            >
-              <span className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4" /> Mentorship Oversight
-              </span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-            >
-              <span className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" /> Analytics
-              </span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full justify-start"
-            >
-              <span className="flex items-center gap-2">
-                <Settings className="h-4 w-4" /> Platform Settings
-              </span>
-            </Button>
+            {auditLogs.map((log) => (
+              <div
+                key={log.id}
+                className="rounded-xl border border-border bg-background p-3.5 space-y-1"
+              >
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="font-bold text-primary">{log.actor}</span>
+                  <span className="text-secondary">{log.time}</span>
+                </div>
+                <p className="text-xs text-foreground leading-relaxed">
+                  {log.action}
+                </p>
+              </div>
+            ))}
           </div>
-        </motion.section>
-      </div>
-    </main>
+        </div>
+      </section>
+
+      {/* 3. Administrative Modules Directory */}
+      <section className="space-y-4">
+        <div>
+          <p className="text-xs font-mono uppercase tracking-wider font-semibold text-primary">
+            Role-Scoped Control Planes
+          </p>
+          <h2 className="font-display text-2xl font-bold text-foreground">
+            Administrative Modules & Oversight Consoles
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {managementShortcuts.map((mod) => {
+            const Icon = mod.icon
+            return (
+              <Link
+                key={mod.to}
+                to={mod.to}
+                className="rounded-2xl border border-border bg-card p-5 shadow-card hover:border-primary/60 transition-colors flex flex-col justify-between gap-3 group"
+              >
+                <div className="space-y-2">
+                  <div className="h-9 w-9 rounded-xl border border-border bg-primary/10 text-primary flex items-center justify-center">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <h3 className="font-display text-base font-bold text-foreground group-hover:text-primary transition-colors">
+                    {mod.title}
+                  </h3>
+                  <p className="text-xs text-secondary leading-relaxed">
+                    {mod.desc}
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1 text-xs font-mono font-semibold text-primary">
+                  Open Module
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </span>
+              </Link>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Confirmation Modal for Consequential Moderation Actions */}
+      <AnimatePresence>
+        {confirmingItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setConfirmingItem(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4"
+            >
+              <h3 className="font-display text-lg font-bold text-foreground">
+                Confirm Moderation Action ({confirmingItem.decision})
+              </h3>
+              <p className="text-xs text-secondary">
+                Target: <strong className="text-foreground">{confirmingItem.item.title}</strong>
+              </p>
+              <div>
+                <label className="block text-xs font-mono uppercase font-semibold text-foreground mb-1">
+                  Audit Reason / Moderation Note
+                </label>
+                <Input
+                  value={moderationReason}
+                  onChange={(e) => setModerationReason(e.target.value)}
+                  placeholder="Enter verification reference or moderation reason..."
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setConfirmingItem(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  variant={
+                    confirmingItem.decision === 'REJECTED'
+                      ? 'destructive'
+                      : 'default'
+                  }
+                  onClick={handleConfirmModeration}
+                >
+                  Confirm {confirmingItem.decision}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </RoleShell>
   )
 }

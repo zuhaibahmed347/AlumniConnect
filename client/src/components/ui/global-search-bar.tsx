@@ -383,7 +383,6 @@ const QUICK_SUGGESTIONS: ReadonlyArray<{
   { label: 'Dubai & Gulf Chapter', query: 'Dubai', category: 'ALL' },
   { label: 'Class of 2019 Alumni', query: '2019', category: 'ALUMNI' },
   { label: 'Grand Homecoming 2026', query: 'Homecoming', category: 'EVENTS' },
-  { label: 'FinTech & Banking', query: 'FinTech', category: 'ALL' },
 ]
 
 interface GlobalSearchContextValue {
@@ -424,7 +423,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<GlobalSearchCategory>('ALL')
   const [activeIndex, setActiveIndex] = useState(0)
-  const inputRef = useRef<HTMLInputElement | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -519,9 +518,9 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
       let combined: GlobalSearchResultItem[] = []
       if (category === 'ALL') {
         combined = [
-          ...matchedAlumni.slice(0, q ? 6 : 3),
-          ...matchedJobs.slice(0, q ? 6 : 3),
-          ...matchedEvents.slice(0, q ? 5 : 3),
+          ...matchedAlumni.slice(0, q ? 5 : 4),
+          ...matchedJobs.slice(0, q ? 5 : 4),
+          ...matchedEvents.slice(0, q ? 4 : 3),
         ]
       } else if (category === 'ALUMNI') {
         combined = matchedAlumni
@@ -616,7 +615,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
       <AnimatePresence>
         {isOpen && (
           <div
-            className="fixed inset-0 z-[100] flex items-start justify-center px-3 sm:px-6 pt-12 sm:pt-20 pb-6"
+            className="fixed inset-0 z-[100] flex items-start justify-center px-2.5 sm:px-6 pt-8 sm:pt-16 pb-6"
             role="dialog"
             aria-modal="true"
             aria-label="Global Platform Search"
@@ -646,66 +645,79 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
               }}
               className="relative z-10 w-full max-w-4xl overflow-hidden rounded-2xl sm:rounded-3xl border border-border bg-card text-foreground shadow-[0_28px_70px_-15px_rgba(9,20,34,0.35)] dark:shadow-[0_32px_80px_-12px_rgba(0,0,0,0.85)] ring-1 ring-white/20 dark:ring-white/10"
             >
-              {/* Top Search Input Bar */}
-              <div className="relative flex items-center gap-3 border-b border-border/80 bg-background/70 dark:bg-background/50 px-4 sm:px-6 py-3.5 sm:py-4">
-                <motion.div
-                  animate={{
-                    scale: query ? 1.08 : 1,
-                    rotate: query ? -6 : 0,
-                  }}
-                  transition={{ type: 'spring', stiffness: 360, damping: 20 }}
-                  className="text-primary dark:text-accent shrink-0"
-                >
-                  <Search className="h-5 w-5" />
-                </motion.div>
+              {/* Top Specular Accent Hairline */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none inset-x-0 top-0 h-[2px] bg-gradient-to-r from-primary via-emerald-400 to-amber-500"
+              />
 
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search alumni by name or cohort, job referrals, or chapter events..."
-                  aria-label="Search alumni, job listings, or events"
-                  className="w-full bg-transparent text-sm sm:text-base font-medium text-foreground placeholder:text-muted-foreground focus:outline-none"
-                />
+              {/* Top Search Bar Header — Cohesive Recessed Pill Without Inner Focus Box */}
+              <div className="border-b border-border/80 bg-gradient-to-b from-stone/65 via-background/95 to-background/80 dark:from-stone/35 dark:via-background/90 dark:to-background/75 px-3.5 sm:px-5 py-3 sm:py-3.5">
+                <div className="group/searchbar relative flex items-center gap-2.5 sm:gap-3 rounded-2xl border border-border/90 bg-card dark:bg-card/95 px-3 sm:px-4 py-2 sm:py-2.5 shadow-[inset_0_1px_2px_rgba(9,20,34,0.04),0_2px_8px_-2px_rgba(9,20,34,0.05)] transition-all duration-200 focus-within:border-primary dark:focus-within:border-accent focus-within:ring-4 focus-within:ring-primary/12 dark:focus-within:ring-accent/15 focus-within:shadow-[0_12px_28px_-8px_rgba(13,110,91,0.18)]">
+                  {/* Animated Left Search Icon Badge */}
+                  <motion.div
+                    animate={{
+                      scale: query ? 1.06 : 1,
+                      rotate: query ? -4 : 0,
+                    }}
+                    transition={{ type: 'spring', stiffness: 360, damping: 20 }}
+                    className="h-9 w-9 rounded-xl border bg-primary/10 dark:bg-primary/20 border-primary/25 text-primary dark:text-accent flex items-center justify-center shrink-0 transition-colors"
+                  >
+                    <Search className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </motion.div>
 
-                <AnimatePresence>
-                  {query && (
-                    <motion.button
-                      key="clear-query"
-                      type="button"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      onClick={() => {
-                        setQuery('')
-                        inputRef.current?.focus()
-                      }}
-                      className="inline-flex items-center gap-1 rounded-lg bg-stone px-2.5 py-1 text-xs font-medium text-secondary hover:text-foreground transition-colors shrink-0"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                      Clear
-                    </motion.button>
-                  )}
-                </AnimatePresence>
+                  {/* Zero-Outline Search Input */}
+                  <input
+                    ref={inputRef}
+                    data-slot="search-input"
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search alumni by name, cohort, company, skill, job referrals, or chapter events..."
+                    aria-label="Search alumni, job listings, and events"
+                    className="w-full min-w-0 bg-transparent border-0 text-sm sm:text-base font-medium text-foreground placeholder:text-secondary/70 focus:outline-none focus:ring-0"
+                  />
 
-                <button
-                  type="button"
-                  onClick={closeSearch}
-                  aria-label="Close global search"
-                  className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1 text-[11px] font-mono font-semibold text-secondary hover:text-foreground hover:bg-stone transition-colors shrink-0"
-                >
-                  ESC
-                </button>
+                  {/* Clear Query Button */}
+                  <AnimatePresence>
+                    {query && (
+                      <motion.button
+                        key="clear-query"
+                        type="button"
+                        initial={{ opacity: 0, scale: 0.85 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.85 }}
+                        onClick={() => {
+                          setQuery('')
+                          inputRef.current?.focus()
+                        }}
+                        className="inline-flex items-center gap-1 rounded-xl border border-border/80 bg-stone/80 px-2.5 py-1.5 text-xs font-semibold text-secondary hover:text-foreground hover:bg-stone transition-colors shrink-0 cursor-pointer"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Clear</span>
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Styled ESC Keycap */}
+                  <button
+                    type="button"
+                    onClick={closeSearch}
+                    aria-label="Close global search"
+                    className="inline-flex items-center gap-1 rounded-xl border border-border bg-stone/70 dark:bg-stone/40 px-2.5 py-1.5 text-[11px] font-mono font-semibold text-secondary hover:text-foreground hover:bg-stone shadow-[0_1.5px_0_0_rgba(9,20,34,0.08)] transition-colors shrink-0 cursor-pointer"
+                  >
+                    ESC
+                  </button>
+                </div>
               </div>
 
               {/* Animated Category Filter Tabs + Quick Suggestions */}
-              <div className="border-b border-border/70 bg-stone/40 dark:bg-stone/25 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="border-b border-border/70 bg-stone/45 dark:bg-stone/25 px-3.5 sm:px-5 py-2.5 sm:py-3 flex flex-wrap items-center justify-between gap-2.5">
                 <LayoutGroup id="global-search-tabs">
                   <div
                     role="tablist"
                     aria-label="Search result categories"
-                    className="flex flex-wrap items-center gap-1.5"
+                    className="flex flex-wrap items-center gap-1 sm:gap-1.5"
                   >
                     {CATEGORY_TABS.map((tab) => {
                       const isActive = category === tab.id
@@ -717,7 +729,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                           role="tab"
                           aria-selected={isActive}
                           onClick={() => setCategory(tab.id)}
-                          className={`relative inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs sm:text-sm font-semibold transition-colors ${
+                          className={`relative inline-flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 sm:px-3.5 py-1.5 text-xs sm:text-sm font-semibold transition-colors cursor-pointer ${
                             isActive
                               ? 'text-white dark:text-primary-foreground'
                               : 'text-secondary hover:text-foreground'
@@ -750,10 +762,10 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                   </div>
                 </LayoutGroup>
 
-                {/* Quick Filter Chips when query is empty */}
+                {/* Quick Filter Chips */}
                 <div className="hidden lg:flex items-center gap-1.5">
                   <span className="text-[11px] font-mono uppercase tracking-wider text-secondary mr-1">
-                    Try:
+                    Quick:
                   </span>
                   {QUICK_SUGGESTIONS.slice(0, 3).map((chip) => (
                     <button
@@ -764,7 +776,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                         setCategory(chip.category)
                         inputRef.current?.focus()
                       }}
-                      className="rounded-lg border border-border/80 bg-card px-2.5 py-1 text-xs font-medium text-secondary hover:text-primary dark:hover:text-accent hover:border-primary/40 transition-colors"
+                      className="rounded-lg border border-border/80 bg-card px-2.5 py-1 text-xs font-medium text-secondary hover:text-primary dark:hover:text-accent hover:border-primary/40 transition-colors cursor-pointer"
                     >
                       {chip.label}
                     </button>
@@ -772,7 +784,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                 </div>
               </div>
 
-              {/* Main Body: Results List (Left) + Live Dossier Preview (Right on md+) */}
+              {/* Main Body: Search Results + Live Dossier Preview */}
               <div className="grid grid-cols-1 md:grid-cols-12 max-h-[68vh] min-h-[360px] divide-y md:divide-y-0 md:divide-x divide-border/80">
                 {/* Left Column: Animated Result Rows */}
                 <div className="md:col-span-7 overflow-y-auto p-3 sm:p-4 space-y-1.5">
@@ -796,7 +808,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                               type="button"
                               onMouseEnter={() => setActiveIndex(idx)}
                               onClick={() => handleSelectResult(item)}
-                              className="relative w-full text-left rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3.5 transition-colors focus:outline-none"
+                              className="relative w-full text-left rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3.5 transition-colors focus:outline-none cursor-pointer"
                             >
                               {isSelected && (
                                 <motion.div
@@ -835,7 +847,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
 
                                 <div className="min-w-0 space-y-0.5">
                                   <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-mono uppercase tracking-wider font-semibold px-2 py-0.5 rounded-md bg-stone text-primary dark:text-accent border border-border/70 shrink-0">
+                                    <span className="text-[10px] font-mono uppercase tracking-wider font-semibold px-2 py-0.5 rounded-md border shrink-0 bg-stone text-primary dark:text-accent border-border/70">
                                       {item.type === 'ALUMNI'
                                         ? 'Alumni'
                                         : item.type === 'JOBS'
@@ -888,7 +900,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
-                        className="py-12 px-4 text-center space-y-4"
+                        className="py-10 px-4 text-center space-y-4"
                       >
                         <div className="mx-auto h-12 w-12 rounded-2xl bg-stone flex items-center justify-center text-secondary">
                           <Search className="h-5 w-5" />
@@ -898,9 +910,9 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                             No matches found for “{query}”
                           </p>
                           <p className="text-xs sm:text-sm text-secondary max-w-sm mx-auto">
-                            Try searching for a graduation year (e.g. 2019), skill
-                            (Kubernetes, FinTech), city (Karachi, Dubai, Munich),
-                            or event topic.
+                            Try searching for a graduation year (e.g. 2019),
+                            skill (Kubernetes, FinTech), or city (Karachi,
+                            Dubai, Munich).
                           </p>
                         </div>
                         <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
@@ -912,7 +924,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                                 setQuery(chip.query)
                                 setCategory(chip.category)
                               }}
-                              className="rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:border-primary transition-colors"
+                              className="rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:border-primary transition-colors cursor-pointer"
                             >
                               {chip.label}
                             </button>
@@ -932,7 +944,10 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                         initial={{ opacity: 0, x: 10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -8 }}
-                        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                        transition={{
+                          duration: 0.18,
+                          ease: [0.16, 1, 0.3, 1],
+                        }}
                         className="space-y-5"
                       >
                         {/* ALUMNI PREVIEW */}
@@ -995,7 +1010,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                               <button
                                 type="button"
                                 onClick={() => handleSelectResult(activeItem)}
-                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-primary/90 transition-colors shadow-sm"
+                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
                               >
                                 View in Alumni Directory
                                 <ArrowRight className="h-4 w-4" />
@@ -1007,7 +1022,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                                     setIsOpen(false)
                                     navigate('/mentorship')
                                   }}
-                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-stone transition-colors"
+                                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-stone transition-colors cursor-pointer"
                                 >
                                   Request 1-on-1 Mentorship
                                 </button>
@@ -1035,14 +1050,17 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                                   {activeItem.title}
                                 </h3>
                                 <p className="text-xs sm:text-sm font-medium text-secondary">
-                                  {activeItem.company} · {activeItem.workplaceLabel}
+                                  {activeItem.company} ·{' '}
+                                  {activeItem.workplaceLabel}
                                 </p>
                               </div>
                             </div>
 
                             <div className="space-y-2.5 border-y border-border/70 py-4 text-xs sm:text-sm">
                               <div className="flex items-center justify-between">
-                                <span className="text-secondary">Compensation</span>
+                                <span className="text-secondary">
+                                  Compensation
+                                </span>
                                 <span className="font-mono font-bold text-primary dark:text-accent">
                                   {activeItem.compensationDisplay}
                                 </span>
@@ -1054,16 +1072,22 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-secondary">Alumni Referrer</span>
+                                <span className="text-secondary">
+                                  Alumni Referrer
+                                </span>
                                 <span className="font-medium text-foreground">
-                                  {activeItem.referrerName} ({activeItem.referrerCohort})
+                                  {activeItem.referrerName} (
+                                  {activeItem.referrerCohort})
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-secondary">Review SLA</span>
+                                <span className="text-secondary">
+                                  Review SLA
+                                </span>
                                 <span className="inline-flex items-center gap-1 font-mono text-xs text-primary dark:text-accent">
-                                  <Clock className="h-3.5 w-3.5" />
-                                  ~{activeItem.referralTurnaroundHours}h turnaround
+                                  <Clock className="h-3.5 w-3.5" />~
+                                  {activeItem.referralTurnaroundHours}h
+                                  turnaround
                                 </span>
                               </div>
                             </div>
@@ -1088,7 +1112,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                               <button
                                 type="button"
                                 onClick={() => handleSelectResult(activeItem)}
-                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-primary/90 transition-colors shadow-sm"
+                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
                               >
                                 View Role & Request Referral
                                 <ArrowRight className="h-4 w-4" />
@@ -1103,7 +1127,8 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                             <div className="space-y-2">
                               <span className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider font-semibold text-primary dark:text-accent">
                                 <Calendar className="h-3.5 w-3.5" />
-                                {activeItem.category} · {activeItem.chapterLabel}
+                                {activeItem.category} ·{' '}
+                                {activeItem.chapterLabel}
                               </span>
                               <h3 className="font-display text-lg font-bold text-foreground leading-snug">
                                 {activeItem.title}
@@ -1115,21 +1140,29 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
 
                             <div className="space-y-2.5 border-y border-border/70 py-4 text-xs sm:text-sm">
                               <div className="flex items-center justify-between">
-                                <span className="text-secondary">Date & Time</span>
+                                <span className="text-secondary">
+                                  Date & Time
+                                </span>
                                 <span className="font-mono font-semibold text-foreground">
-                                  {activeItem.dateDisplay} · {activeItem.timeDisplay}
+                                  {activeItem.dateDisplay} ·{' '}
+                                  {activeItem.timeDisplay}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between gap-2">
-                                <span className="text-secondary shrink-0">Venue</span>
+                                <span className="text-secondary shrink-0">
+                                  Venue
+                                </span>
                                 <span className="font-medium text-foreground text-right truncate">
                                   {activeItem.location}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-secondary">Attendance</span>
+                                <span className="text-secondary">
+                                  Attendance
+                                </span>
                                 <span className="font-mono font-semibold text-primary dark:text-accent">
-                                  {activeItem.registeredCount} / {activeItem.capacity} RSVP’d
+                                  {activeItem.registeredCount} /{' '}
+                                  {activeItem.capacity} RSVP’d
                                 </span>
                               </div>
                             </div>
@@ -1138,7 +1171,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                               <button
                                 type="button"
                                 onClick={() => handleSelectResult(activeItem)}
-                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-primary/90 transition-colors shadow-sm"
+                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs sm:text-sm font-semibold text-white hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
                               >
                                 View Event Details & RSVP
                                 <ArrowRight className="h-4 w-4" />
@@ -1149,7 +1182,8 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                       </motion.div>
                     ) : (
                       <div className="py-12 text-center text-xs text-secondary">
-                        Select a result to inspect its verified Sukkur IBA dossier.
+                        Select a result to inspect its verified Sukkur IBA
+                        dossier.
                       </div>
                     )}
                   </AnimatePresence>
@@ -1164,7 +1198,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                           setIsOpen(false)
                           navigate('/alumni')
                         }}
-                        className="hover:underline"
+                        className="hover:underline cursor-pointer"
                       >
                         Directory
                       </button>
@@ -1175,7 +1209,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                           setIsOpen(false)
                           navigate('/jobs')
                         }}
-                        className="hover:underline"
+                        className="hover:underline cursor-pointer"
                       >
                         Jobs
                       </button>
@@ -1186,7 +1220,7 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                           setIsOpen(false)
                           navigate('/events')
                         }}
-                        className="hover:underline"
+                        className="hover:underline cursor-pointer"
                       >
                         Events
                       </button>
@@ -1217,10 +1251,10 @@ export function GlobalSearchProvider({ children }: { children: ReactNode }) {
                     Dismiss
                   </span>
                 </div>
-                <span>
-                  Indexing {GLOBAL_ALUMNI_INDEX.length} featured alumni ·{' '}
-                  {GLOBAL_JOBS_INDEX.length} active referrals ·{' '}
-                  {GLOBAL_EVENTS_INDEX.length} chapter events
+                <span className="hidden md:inline">
+                  Sukkur IBA Global Index · {GLOBAL_ALUMNI_INDEX.length} alumni
+                  · {GLOBAL_JOBS_INDEX.length} referrals ·{' '}
+                  {GLOBAL_EVENTS_INDEX.length} events
                 </span>
               </div>
             </motion.div>
@@ -1254,17 +1288,17 @@ export function GlobalSearchTrigger({
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 360, damping: 24 }}
       aria-label="Open global platform search (Command+K)"
-      className={`group inline-flex items-center justify-between gap-2.5 rounded-xl border border-border/90 bg-card/85 dark:bg-card/80 hover:bg-stone/80 dark:hover:bg-stone/60 hover:border-primary/40 dark:hover:border-accent/40 text-secondary hover:text-foreground transition-colors shadow-xs ${
+      className={`group inline-flex items-center justify-between gap-2 rounded-xl border border-border/90 bg-card/85 dark:bg-card/80 hover:bg-stone/80 dark:hover:bg-stone/60 hover:border-primary/40 dark:hover:border-accent/40 text-secondary hover:text-foreground transition-colors shadow-xs min-w-0 max-w-full cursor-pointer ${
         compact
-          ? 'px-2.5 sm:px-3 py-1.5 text-xs'
-          : 'px-3 sm:px-3.5 py-2 text-xs sm:text-sm min-w-[40px] sm:min-w-[210px] lg:min-w-[250px]'
+          ? 'px-2.5 py-1.5 text-xs xl:w-[190px]'
+          : 'px-2.5 sm:px-3 py-1.5 text-xs lg:w-[180px] xl:w-[225px]'
       } ${className}`}
     >
       <span className="flex items-center gap-2 min-w-0">
         <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary dark:text-accent shrink-0 transition-transform group-hover:scale-110" />
         <span
           className={`truncate font-normal text-secondary group-hover:text-foreground transition-colors ${
-            compact ? 'hidden lg:inline' : 'hidden sm:inline'
+            compact ? 'hidden xl:inline' : 'hidden lg:inline'
           }`}
         >
           {placeholder}
@@ -1292,7 +1326,7 @@ export function InlineGlobalSearchBar({
   const [inlineCategory, setInlineCategory] =
     useState<GlobalSearchCategory>('ALL')
   const [isFocused, setIsFocused] = useState(false)
-  const containerRef = useRef<HTMLDivElement | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -1349,15 +1383,18 @@ export function InlineGlobalSearchBar({
             : '0 4px 16px -6px rgba(9, 20, 34, 0.06)',
         }}
         transition={{ type: 'spring', stiffness: 300, damping: 26 }}
-        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-3 transition-colors ${
+        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border bg-card px-3.5 sm:px-4 py-2.5 sm:py-3 transition-all ${
           isFocused
-            ? 'border-primary dark:border-accent ring-2 ring-primary/15 dark:ring-accent/20'
+            ? 'border-primary dark:border-accent ring-4 ring-primary/12 dark:ring-accent/15'
             : 'border-border/90'
         }`}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <Search className="h-5 w-5 text-primary dark:text-accent shrink-0" />
+          <div className="h-9 w-9 rounded-xl bg-primary/10 dark:bg-primary/20 border border-primary/20 flex items-center justify-center text-primary dark:text-accent shrink-0">
+            <Search className="h-4 w-4 sm:h-5 sm:w-5" />
+          </div>
           <input
+            data-slot="search-input"
             type="text"
             value={inlineQuery}
             onFocus={() => setIsFocused(true)}
@@ -1365,16 +1402,16 @@ export function InlineGlobalSearchBar({
               setInlineQuery(e.target.value)
               setIsFocused(true)
             }}
-            placeholder="Quick search across Sukkur IBA alumni, job referrals, or chapter events..."
+            placeholder="Quick search across Sukkur IBA alumni, job referrals, and chapter events..."
             aria-label="Quick global search"
-            className="w-full bg-transparent text-sm sm:text-base font-medium text-foreground placeholder:text-muted-foreground focus:outline-none"
+            className="w-full min-w-0 bg-transparent border-0 text-sm sm:text-base font-medium text-foreground placeholder:text-secondary/70 focus:outline-none focus:ring-0"
           />
           {inlineQuery && (
             <button
               type="button"
               onClick={() => setInlineQuery('')}
               aria-label="Clear search query"
-              className="rounded-lg p-1 text-secondary hover:text-foreground hover:bg-stone transition-colors shrink-0"
+              className="rounded-lg p-1.5 text-secondary hover:text-foreground hover:bg-stone transition-colors shrink-0 cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1382,7 +1419,7 @@ export function InlineGlobalSearchBar({
         </div>
 
         {/* Category filter pills + Command Palette button */}
-        <div className="flex items-center justify-between sm:justify-end gap-1.5 border-t sm:border-t-0 pt-2.5 sm:pt-0 border-border/60 shrink-0">
+        <div className="flex items-center justify-between sm:justify-end gap-1.5 border-t sm:border-t-0 pt-2 sm:pt-0 border-border/60 shrink-0">
           <LayoutGroup id="inline-global-search-tabs">
             <div className="flex items-center gap-1">
               {CATEGORY_TABS.map((tab) => {
@@ -1395,7 +1432,7 @@ export function InlineGlobalSearchBar({
                       setInlineCategory(tab.id)
                       setIsFocused(true)
                     }}
-                    className={`relative rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
+                    className={`relative rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer ${
                       active
                         ? 'text-white dark:text-primary-foreground'
                         : 'text-secondary hover:text-foreground'
@@ -1429,7 +1466,7 @@ export function InlineGlobalSearchBar({
                 category: inlineCategory,
               })
             }
-            className="hidden md:inline-flex items-center gap-1 rounded-lg border border-border bg-stone/70 px-2.5 py-1 text-[11px] font-mono font-semibold text-foreground hover:border-primary/40 transition-colors ml-1"
+            className="hidden md:inline-flex items-center gap-1 rounded-lg border border-border bg-stone/70 px-2.5 py-1 text-[11px] font-mono font-semibold text-foreground hover:border-primary/40 transition-colors cursor-pointer"
           >
             Full View ⌘K
           </button>
@@ -1458,7 +1495,7 @@ export function InlineGlobalSearchBar({
                       setIsFocused(false)
                       navigate(item.route)
                     }}
-                    className="w-full text-left rounded-xl p-2.5 sm:p-3 flex items-center justify-between gap-3 hover:bg-stone/80 dark:hover:bg-stone/50 transition-colors group"
+                    className="w-full text-left rounded-xl p-2.5 sm:p-3 flex items-center justify-between gap-3 hover:bg-stone/80 dark:hover:bg-stone/50 transition-colors group cursor-pointer"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="text-[10px] font-mono uppercase tracking-wider font-semibold px-2 py-0.5 rounded-md bg-stone text-primary dark:text-accent border border-border/70 shrink-0">
@@ -1494,7 +1531,8 @@ export function InlineGlobalSearchBar({
 
             <div className="border-t border-border/70 bg-stone/50 dark:bg-stone/30 px-4 py-2.5 flex items-center justify-between text-xs">
               <span className="text-secondary">
-                Press <kbd className="font-mono font-semibold text-foreground">⌘K</kbd> for split dossier preview
+                Press <kbd className="font-mono font-semibold">⌘K</kbd> anytime
+                for split-view dossier search
               </span>
               <button
                 type="button"
@@ -1505,9 +1543,9 @@ export function InlineGlobalSearchBar({
                     category: inlineCategory,
                   })
                 }}
-                className="font-mono font-semibold text-primary dark:text-accent hover:underline"
+                className="font-mono font-semibold text-primary dark:text-accent hover:underline cursor-pointer"
               >
-                Open Full Command Search →
+                Open Command Palette →
               </button>
             </div>
           </motion.div>

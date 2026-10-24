@@ -4,6 +4,12 @@ import { ThemeSwitcher } from '@/components/ui/theme-switcher'
 import { GlobalSearchTrigger } from '@/components/ui/global-search-bar'
 import { MediaImage } from '@/components/ui/media-image'
 import {
+  TiltEventCard,
+  EventRsvpToggleBar,
+  useEventRsvpState,
+  type EventEngagementStatus,
+} from '@/components/ui/interactive-event-card'
+import {
   Loader2,
   UserPlus,
   MapPin,
@@ -13,10 +19,12 @@ import {
   Building2,
   ArrowRight,
   RotateCcw,
+  Star,
+  CheckCircle2,
 } from 'lucide-react'
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence, type Variants } from 'framer-motion'
+import { motion, AnimatePresence, LayoutGroup, type Variants } from 'framer-motion'
 import { toast } from '@/lib/toast'
 
 interface AlumniEventItem {
@@ -48,20 +56,13 @@ const gridVariants: Variants = {
   },
 }
 
-const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 18, scale: 0.98 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { type: 'spring', stiffness: 250, damping: 26 },
-  },
-}
-
 export function EventsHubPage() {
   const navigate = useNavigate()
   const [events, setEvents] = useState<AlumniEventItem[]>([])
   const [loading, setLoading] = useState(true)
+  const { rsvpMap, toggleEventStatus, counts } = useEventRsvpState()
+  const [rsvpFilter, setRsvpFilter] = useState<'ALL' | 'ATTENDING' | 'INTERESTED'>('ALL')
+  const [prioritizeRsvps, setPrioritizeRsvps] = useState(true)
   const [filters, setFilters] = useState({
     search: '',
     status: 'ALL' as 'ALL' | 'PUBLISHED' | 'COMPLETED',
@@ -201,10 +202,34 @@ export function EventsHubPage() {
       const matchesChapter =
         filters.chapter === 'ALL' || ev.chapter === filters.chapter
 
-      return matchesSearch && matchesStatus && matchesFormat && matchesChapter
+      const userRsvp = rsvpMap[ev.id] || 'NONE'
+      const matchesRsvp =
+        rsvpFilter === 'ALL' ||
+        (rsvpFilter === 'ATTENDING' && userRsvp === 'ATTENDING') ||
+        (rsvpFilter === 'INTERESTED' && userRsvp === 'INTERESTED')
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesFormat &&
+        matchesChapter &&
+        matchesRsvp
+      )
     })
 
+    const rsvpWeight = (status: EventEngagementStatus) => {
+      if (status === 'ATTENDING') return 2
+      if (status === 'INTERESTED') return 1
+      return 0
+    }
+
     return [...matches].sort((a, b) => {
+      if (prioritizeRsvps) {
+        const weightDiff =
+          rsvpWeight(rsvpMap[b.id] || 'NONE') -
+          rsvpWeight(rsvpMap[a.id] || 'NONE')
+        if (weightDiff !== 0) return weightDiff
+      }
       if (filters.sortBy === 'POPULAR') {
         return b.registrationCount - a.registrationCount
       }
@@ -213,14 +238,15 @@ export function EventsHubPage() {
       }
       return a.startDate.getTime() - b.startDate.getTime()
     })
-  }, [events, filters])
+  }, [events, filters, rsvpMap, rsvpFilter, prioritizeRsvps])
 
   const hasActiveFilters =
     filters.search.trim() !== '' ||
     filters.status !== 'ALL' ||
     filters.format !== 'ALL' ||
     filters.chapter !== 'ALL' ||
-    filters.sortBy !== 'DATE_ASC'
+    filters.sortBy !== 'DATE_ASC' ||
+    rsvpFilter !== 'ALL'
 
   const resetFilters = () => {
     setFilters({
@@ -230,6 +256,7 @@ export function EventsHubPage() {
       chapter: 'ALL',
       sortBy: 'DATE_ASC',
     })
+    setRsvpFilter('ALL')
   }
 
   if (loading) {
@@ -419,160 +446,258 @@ export function EventsHubPage() {
             </SelectField>
           </div>
 
-          {/* Filter Summary & Active Reset Footer */}
-          <div className="pt-4 border-t border-border flex flex-wrap items-center justify-between gap-3 text-xs text-secondary">
-            <div className="flex flex-wrap items-center gap-2 font-mono tabular-nums">
-              <span className="font-semibold text-foreground">
-                Showing {filteredEvents.length} of {events.length} events
+          {/* Interactive RSVP Status Filter & Layout Reordering Controls */}
+          <div className="pt-4 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-mono uppercase tracking-wider text-secondary mr-1">
+                My Engagement:
               </span>
-              {filters.chapter !== 'ALL' && (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <span className="text-primary font-semibold">
-                    Chapter: {filters.chapter.toUpperCase()}
-                  </span>
-                </>
-              )}
-              {filters.format !== 'ALL' && (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <span className="text-primary font-semibold">
-                    Format: {filters.format === 'VIRTUAL' ? 'Online / Hybrid' : 'In-Person'}
-                  </span>
-                </>
-              )}
+              <div
+                role="group"
+                aria-label="Filter events by your Interested or Attending status"
+                className="inline-flex flex-wrap items-center gap-1 p-1 rounded-xl bg-stone border border-border/80"
+              >
+                {(
+                  [
+                    { id: 'ALL', label: `All Gatherings (${events.length})` },
+                    {
+                      id: 'ATTENDING',
+                      label: `Attending (${counts.attending})`,
+                      icon: CheckCircle2,
+                    },
+                    {
+                      id: 'INTERESTED',
+                      label: `Interested (${counts.interested})`,
+                      icon: Star,
+                    },
+                  ] as const
+                ).map((tab) => {
+                  const active = rsvpFilter === tab.id
+                  const Icon = 'icon' in tab ? tab.icon : null
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setRsvpFilter(tab.id)}
+                      className={`relative px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors ${
+                        active
+                          ? 'text-foreground font-semibold'
+                          : 'text-secondary hover:text-foreground'
+                      }`}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="events-hub-rsvp-filter-pill"
+                          transition={{
+                            type: 'spring',
+                            stiffness: 360,
+                            damping: 28,
+                          }}
+                          className="absolute inset-0 rounded-lg bg-card shadow-sm border border-primary/25"
+                        />
+                      )}
+                      {Icon && (
+                        <Icon className="relative z-10 h-3.5 w-3.5 text-primary dark:text-[#2DD4BF]" />
+                      )}
+                      <span className="relative z-10">{tab.label}</span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
-            {hasActiveFilters && (
+            <div className="flex flex-wrap items-center gap-3 text-xs text-secondary">
               <button
                 type="button"
-                onClick={resetFilters}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                onClick={() => setPrioritizeRsvps((v) => !v)}
+                aria-pressed={prioritizeRsvps}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-mono transition-colors ${
+                  prioritizeRsvps
+                    ? 'border-primary/40 bg-primary/10 text-primary dark:text-[#2DD4BF] font-semibold'
+                    : 'border-border bg-stone/60 text-secondary hover:text-foreground'
+                }`}
               >
-                <RotateCcw className="h-3.5 w-3.5" />
-                Reset All Filters
+                {prioritizeRsvps
+                  ? '✓ Auto-Pinning Attending & Interested First'
+                  : 'Sort Strictly by Calendar / Filter'}
               </button>
-            )}
+
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Reset All Filters
+                </button>
+              )}
+            </div>
           </div>
         </motion.section>
 
-        {/* Events Grid with Modern Spacing */}
+        {/* Events Grid with Framer Motion Layout Animations & 3D Tilt Cards */}
         {filteredEvents.length > 0 ? (
-          <motion.section
-            variants={gridVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 lg:gap-8"
-          >
-            <AnimatePresence mode="popLayout">
-              {filteredEvents.map((event) => {
-                const start = event.startDate
-                const end = event.endDate
-                const capacityPct = Math.min(
-                  100,
-                  Math.round((event.registrationCount / event.capacity) * 100),
-                )
+          <LayoutGroup id="member-events-hub-grid">
+            <motion.section
+              layout
+              variants={gridVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 lg:gap-8"
+            >
+              <AnimatePresence mode="popLayout">
+                {filteredEvents.map((event) => {
+                  const start = event.startDate
+                  const end = event.endDate
+                  const rsvpStatus = rsvpMap[event.id] || 'NONE'
+                  const effectiveRegCount =
+                    event.registrationCount + (rsvpStatus === 'ATTENDING' ? 1 : 0)
+                  const capacityPct = Math.min(
+                    100,
+                    Math.round((effectiveRegCount / event.capacity) * 100),
+                  )
 
-                return (
-                  <motion.article
-                    key={event.id}
-                    layout
-                    variants={cardVariants}
-                    whileHover={{
-                      y: -5,
-                      boxShadow: '0 18px 38px -10px rgba(9, 20, 34, 0.14)',
-                    }}
-                    whileTap={{ scale: 0.99 }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-                    onClick={() => navigate(`/events/${event.id}`)}
-                    className="group rounded-2xl border border-border bg-card overflow-hidden flex flex-col justify-between cursor-pointer shadow-card"
-                  >
-                    <div>
-                      <MediaImage
-                        src={event.coverImageUrl}
-                        alt={event.title}
-                        className="aspect-[16/10] w-full rounded-none"
-                        imgClassName="object-cover object-center group-hover:scale-[1.03] transition-transform duration-500 ease-out-expo"
-                      />
-
-                      <div className="p-6 sm:p-7">
-                        {/* Clean unboxed metadata with typographic separators */}
-                        <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-secondary mb-3 tabular-nums">
-                          <span
-                            className={
-                              event.status === 'PUBLISHED'
-                                ? 'text-primary font-semibold'
-                                : 'text-secondary font-semibold'
-                            }
-                          >
-                            {event.status === 'PUBLISHED' ? 'Upcoming' : 'Completed'}
-                          </span>
-                          <span aria-hidden="true">·</span>
-                          <span>{event.category}</span>
-                          <span aria-hidden="true">·</span>
-                          <span>
-                            {start.toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })}
-                          </span>
-                          {end && start.toDateString() !== end.toDateString() && (
-                            <span>
-                              –{' '}
-                              {end.toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                            </span>
+                  return (
+                    <TiltEventCard
+                      key={event.id}
+                      engagementStatus={rsvpStatus}
+                      onClick={() => navigate(`/events/${event.id}`)}
+                      className="cursor-pointer"
+                    >
+                      <motion.div layout="position">
+                        <div className="relative">
+                          <MediaImage
+                            src={event.coverImageUrl}
+                            alt={event.title}
+                            className="aspect-[16/10] w-full rounded-none"
+                            imgClassName="object-cover object-center group-hover:scale-[1.03] transition-transform duration-500 ease-out-expo"
+                          />
+                          {rsvpStatus !== 'NONE' && (
+                            <motion.div
+                              layout
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              className={`absolute top-3 right-3 px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold shadow-md backdrop-blur-md ${
+                                rsvpStatus === 'ATTENDING'
+                                  ? 'bg-[#0D6E5B]/95 text-white border border-[#2DD4BF]/40'
+                                  : 'bg-[#091422]/90 text-[#F59E0B] border border-[#F59E0B]/40'
+                              }`}
+                            >
+                              {rsvpStatus === 'ATTENDING'
+                                ? '✓ Attending'
+                                : '★ Interested'}
+                            </motion.div>
                           )}
                         </div>
 
-                        <h3 className="font-display text-xl font-bold text-foreground mb-2.5 leading-snug group-hover:text-primary transition-colors">
-                          {event.title}
-                        </h3>
-
-                        <p className="text-sm text-secondary leading-relaxed mb-5">
-                          {event.description}
-                        </p>
-
-                        {/* Attendance progress bar */}
-                        <div className="space-y-1.5 pt-2">
-                          <div className="flex items-center justify-between text-xs font-mono text-secondary tabular-nums">
+                        <motion.div layout className="p-6 sm:p-7">
+                          {/* Clean unboxed metadata with typographic separators */}
+                          <motion.div
+                            layout="position"
+                            className="flex flex-wrap items-center gap-2 text-xs font-mono text-secondary mb-3 tabular-nums"
+                          >
+                            <span
+                              className={
+                                event.status === 'PUBLISHED'
+                                  ? 'text-primary dark:text-[#2DD4BF] font-semibold'
+                                  : 'text-secondary font-semibold'
+                              }
+                            >
+                              {event.status === 'PUBLISHED'
+                                ? 'Upcoming'
+                                : 'Completed'}
+                            </span>
+                            <span aria-hidden="true">·</span>
+                            <span>{event.category}</span>
+                            <span aria-hidden="true">·</span>
                             <span>
-                              {event.registrationCount} / {event.capacity} Registered
+                              {start.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
                             </span>
-                            <span className="font-semibold text-foreground">
-                              {capacityPct}% Full
-                            </span>
-                          </div>
-                          <div className="h-1.5 w-full rounded-full bg-stone overflow-hidden">
-                            <div
-                              style={{ width: `${capacityPct}%` }}
-                              className="h-full rounded-full bg-primary transition-all duration-500"
+                            {end &&
+                              start.toDateString() !== end.toDateString() && (
+                                <span>
+                                  –{' '}
+                                  {end.toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })}
+                                </span>
+                              )}
+                          </motion.div>
+
+                          <motion.h3
+                            layout="position"
+                            className="font-display text-xl font-bold text-foreground mb-2.5 leading-snug group-hover:text-primary dark:group-hover:text-[#2DD4BF] transition-colors"
+                          >
+                            {event.title}
+                          </motion.h3>
+
+                          <motion.p
+                            layout="position"
+                            className="text-sm text-secondary leading-relaxed mb-4"
+                          >
+                            {event.description}
+                          </motion.p>
+
+                          {/* Interactive Interested / Attending Toggle with Framer Motion layout animations */}
+                          <div className="mb-4">
+                            <EventRsvpToggleBar
+                              eventId={event.id}
+                              eventTitle={event.title}
+                              status={rsvpStatus}
+                              onToggle={toggleEventStatus}
+                              compact
                             />
                           </div>
-                        </div>
-                      </div>
-                    </div>
 
-                    <div className="px-6 sm:px-7 py-4 border-t border-border bg-stone/35 flex items-center justify-between gap-3 text-xs">
-                      <span className="flex items-center gap-1.5 text-secondary truncate">
-                        <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
-                        <span className="truncate font-medium">
-                          {event.location}
+                          {/* Attendance progress bar */}
+                          <motion.div layout className="space-y-1.5 pt-2">
+                            <div className="flex items-center justify-between text-xs font-mono text-secondary tabular-nums">
+                              <span>
+                                {effectiveRegCount} / {event.capacity} Registered
+                              </span>
+                              <span className="font-semibold text-foreground">
+                                {capacityPct}% Full
+                              </span>
+                            </div>
+                            <div className="h-1.5 w-full rounded-full bg-stone overflow-hidden">
+                              <motion.div
+                                layout
+                                style={{ width: `${capacityPct}%` }}
+                                className="h-full rounded-full bg-primary transition-all duration-500"
+                              />
+                            </div>
+                          </motion.div>
+                        </motion.div>
+                      </motion.div>
+
+                      <motion.div
+                        layout
+                        className="px-6 sm:px-7 py-4 border-t border-border bg-stone/35 flex items-center justify-between gap-3 text-xs"
+                      >
+                        <span className="flex items-center gap-1.5 text-secondary truncate">
+                          <MapPin className="h-3.5 w-3.5 text-primary dark:text-[#2DD4BF] shrink-0" />
+                          <span className="truncate font-medium">
+                            {event.location}
+                          </span>
                         </span>
-                      </span>
-                      <span className="inline-flex items-center gap-1 font-semibold text-primary group-hover:translate-x-0.5 transition-transform shrink-0">
-                        <span>Details</span>
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </span>
-                    </div>
-                  </motion.article>
-                )
-              })}
-            </AnimatePresence>
-          </motion.section>
+                        <span className="inline-flex items-center gap-1 font-semibold text-primary dark:text-[#2DD4BF] group-hover:translate-x-0.5 transition-transform shrink-0">
+                          <span>Details</span>
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </span>
+                      </motion.div>
+                    </TiltEventCard>
+                  )
+                })}
+              </AnimatePresence>
+            </motion.section>
+          </LayoutGroup>
         ) : (
           <div className="rounded-2xl border border-border bg-card p-12 text-center">
             <Calendar className="h-10 w-10 text-secondary/50 mx-auto mb-3" />
