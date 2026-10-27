@@ -7,3 +7,10 @@ build
 .env.*
 !.env.example
 coverage
+data/*.json
+data/*.tmp*
+uploads/
+*.sqlite
+*.db
+*.log
+.DS_Store

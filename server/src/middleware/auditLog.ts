@@ -1,7 +1,40 @@
 import { Request, Response, NextFunction } from 'express'
 import { prisma } from '../utils/prisma'
 import { AuthenticatedRequest } from './auth'
-import { Prisma } from '@prisma/client'
+
+const REDACTED_AUDIT_KEYS = new Set([
+  'password',
+  'currentPassword',
+  'newPassword',
+  'confirmPassword',
+  'passwordHash',
+  'passwordResetToken',
+  'passwordResetTokenHash',
+  'token',
+  'accessToken',
+  'refreshToken',
+])
+
+function sanitizeLogString(value: string): string {
+  return value.replace(/[\r\n\0\t]+/g, ' ').slice(0, 500)
+}
+
+function sanitizeAuditMetadata(
+  meta?: Record<string, unknown>
+): Record<string, unknown> | undefined {
+  if (!meta || typeof meta !== 'object') return undefined
+  const clean: Record<string, unknown> = {}
+  for (const [key, val] of Object.entries(meta)) {
+    if (REDACTED_AUDIT_KEYS.has(key)) {
+      clean[key] = '[REDACTED]'
+    } else if (typeof val === 'string') {
+      clean[key] = sanitizeLogString(val)
+    } else {
+      clean[key] = val
+    }
+  }
+  return clean
+}
 
 export interface AuditLogOptions {
   action: string
@@ -28,18 +61,20 @@ export function auditLog(options: AuditLogOptions) {
             prisma.auditLog.create({
               data: {
                 userId: req.user!.id,
-                action: options.action,
-                resource: options.resource,
-                resourceId: typeof resourceId === 'string' ? resourceId : undefined,
+                action: sanitizeLogString(options.action),
+                resource: sanitizeLogString(options.resource),
+                resourceId: typeof resourceId === 'string' ? sanitizeLogString(resourceId) : undefined,
                 metadata: {
-                  ...meta,
+                  ...(sanitizeAuditMetadata(meta) || {}),
                   method: req.method,
-                  path: req.path,
+                  path: sanitizeLogString(req.path),
                   statusCode,
                   duration,
-                } as Prisma.InputJsonValue,
+                },
                 ipAddress: req.ip,
-                userAgent: req.get('user-agent'),
+                userAgent: req.get('user-agent')
+                  ? sanitizeLogString(req.get('user-agent')!)
+                  : undefined,
               },
             }),
           )
@@ -63,13 +98,15 @@ export async function logAction(
 ) {
   await prisma.auditLog.create({
     data: {
-      userId,
-      action,
-      resource,
-      resourceId,
-      metadata: metadata as Prisma.InputJsonValue | undefined,
+      userId: sanitizeLogString(userId),
+      action: sanitizeLogString(action),
+      resource: sanitizeLogString(resource),
+      resourceId: resourceId ? sanitizeLogString(resourceId) : undefined,
+      metadata: sanitizeAuditMetadata(metadata),
       ipAddress: req?.ip,
-      userAgent: req?.get('user-agent'),
+      userAgent: req?.get('user-agent')
+        ? sanitizeLogString(req.get('user-agent')!)
+        : undefined,
     },
   })
 }

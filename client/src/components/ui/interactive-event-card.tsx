@@ -9,6 +9,7 @@ import {
 } from 'framer-motion'
 import { Star, CheckCircle2, Sparkles } from 'lucide-react'
 import { toast } from '@/lib/toast'
+import { api, syncPlatformStateKey } from '@/services/api'
 
 export type EventEngagementStatus = 'NONE' | 'INTERESTED' | 'ATTENDING'
 
@@ -42,9 +43,11 @@ export function useEventRsvpState() {
       setRsvpMap(readRsvpMap())
     }
     window.addEventListener(SYNC_EVENT, handleSync)
+    window.addEventListener('siba-backend-hydrated', handleSync)
     window.addEventListener('storage', handleSync)
     return () => {
       window.removeEventListener(SYNC_EVENT, handleSync)
+      window.removeEventListener('siba-backend-hydrated', handleSync)
       window.removeEventListener('storage', handleSync)
     }
   }, [])
@@ -64,6 +67,11 @@ export function useEventRsvpState() {
         try {
           window.localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
           window.dispatchEvent(new CustomEvent(SYNC_EVENT))
+          syncPlatformStateKey('eventRsvps', updated)
+          void api.post(`/events/${eventId}/rsvp`, {
+            status: nextStatus,
+            title: eventTitle,
+          }).catch(() => {})
         } catch {
           // Ignore storage quota errors
         }

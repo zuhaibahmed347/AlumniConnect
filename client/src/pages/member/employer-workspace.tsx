@@ -13,6 +13,7 @@ import {
   type StudentJobApplication,
 } from '@/lib/role-context'
 import { toast } from '@/lib/toast'
+import { api } from '@/services/api'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Briefcase,
@@ -28,7 +29,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 
 type EmployerTab =
   | 'DASHBOARD'
@@ -50,6 +51,16 @@ export function EmployerWorkspacePage() {
   const [applications, setApplications] = useState<StudentJobApplication[]>(
     () => loadJobApplications(),
   )
+
+  useEffect(() => {
+    const syncEmployerState = () => {
+      setOrg(loadEmployerOrg())
+      setJobs(loadEmployerJobs())
+      setApplications(loadJobApplications())
+    }
+    window.addEventListener('siba-backend-hydrated', syncEmployerState)
+    return () => window.removeEventListener('siba-backend-hydrated', syncEmployerState)
+  }, [])
 
   // Job creation / editing form state
   const [editingJobId, setEditingJobId] = useState<string | null>(null)
@@ -138,6 +149,7 @@ export function EmployerWorkspacePage() {
       return
     }
     saveEmployerOrg(org)
+    void api.put('/jobs/employer/org', org).catch(() => {})
     toast.success('Organization profile saved and verified.')
   }
 
@@ -204,6 +216,19 @@ export function EmployerWorkspacePage() {
       : [built, ...jobs]
     setJobs(next)
     saveEmployerJobs(next)
+    if (!editingJobId) {
+      void api.post('/jobs', {
+        id: built.id,
+        title: built.title,
+        company: built.company,
+        description: built.description,
+        requirements: built.requirements.join('. '),
+        location: built.location,
+        isRemote: built.isRemote,
+        employmentType: built.employmentType,
+        status: built.status === 'PUBLISHED' ? 'ACTIVE' : built.status,
+      }).catch(() => {})
+    }
     setEditingJobId(null)
     setJobForm((prev) => ({ ...prev, title: '', description: '' }))
     toast({
@@ -240,6 +265,7 @@ export function EmployerWorkspacePage() {
     )
     setApplications(updated)
     saveJobApplications(updated)
+    void api.patch(`/jobs/applications/${appId}`, { status: nextStatus }).catch(() => {})
     toast({
       title: 'Applicant Status Updated',
       description: `Application moved to ${nextStatus} stage.`,

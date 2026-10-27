@@ -8,7 +8,7 @@ import {
   useNavigate,
 } from 'react-router-dom'
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, lazy, Suspense, type ReactNode } from 'react'
 import {
   ShieldAlert,
   ArrowLeft,
@@ -31,36 +31,125 @@ import { toast } from '@/lib/toast'
 import { LandingPage } from '@/pages/public/landing'
 import { SignInPage } from '@/pages/auth/signin'
 import { RegisterPage } from '@/pages/auth/register'
-import { ForgotPasswordPage } from '@/pages/auth/forgot-password'
-import { ResetPasswordPage } from '@/pages/auth/reset-password'
 import { DashboardPage } from '@/pages/member/dashboard'
 import { StudentDashboardPage } from '@/pages/member/student-dashboard'
 import { AlumniDirectoryPage } from '@/pages/member/alumni-directory'
-import { AlumniProfileDetailPage } from '@/pages/member/alumni-profile-detail'
-import { ProfilePage } from '@/pages/member/profile'
-import { NotificationsPage } from '@/pages/member/notifications'
-import { SettingsPage } from '@/pages/member/settings'
 import { EventsHubPage } from '@/pages/member/events'
 import { JobsPage } from '@/pages/member/jobs'
-import { MessagesPage } from '@/pages/member/messages'
-import { ConversationPage } from '@/pages/member/conversation'
 import { MentorshipProgramPage } from '@/pages/member/mentorship'
-import { MentorshipRelationshipsPage } from '@/pages/member/mentorship-relationships'
-import { MentorProfilePage } from '@/pages/member/mentor-profile'
-import { MentorWorkspacePage } from '@/pages/member/mentor-workspace'
-import { EmployerWorkspacePage } from '@/pages/member/employer-workspace'
-import { JobDetailsPage } from '@/pages/member/job-details'
-import { EventDetailsPage } from '@/pages/member/event-details'
-import { AdminDashboardPage } from '@/pages/admin/dashboard'
-import { AdminCommandCenterPage } from '@/pages/admin/institutional-command-center'
-import { AdminUsersPage } from '@/pages/admin/users'
-import { AdminEventAdministrationPage } from '@/pages/admin/event-administration'
-import { AdminJobAdministrationPage } from '@/pages/admin/job-administration'
-import { AdminMentorshipOverviewPage } from '@/pages/admin/mentorship-overview'
-import { AdminRolesMatrixPage } from '@/pages/admin/roles-matrix'
-import { AdminAnalyticsPage } from '@/pages/admin/analytics'
-import { AdminProfilePage } from '@/pages/admin/profile'
-import { AdminSettingsPage } from '@/pages/admin/settings'
+
+const ForgotPasswordPage = lazy(() =>
+  import('@/pages/auth/forgot-password').then((m) => ({
+    default: m.ForgotPasswordPage,
+  })),
+)
+const ResetPasswordPage = lazy(() =>
+  import('@/pages/auth/reset-password').then((m) => ({
+    default: m.ResetPasswordPage,
+  })),
+)
+const AlumniProfileDetailPage = lazy(() =>
+  import('@/pages/member/alumni-profile-detail').then((m) => ({
+    default: m.AlumniProfileDetailPage,
+  })),
+)
+const ProfilePage = lazy(() =>
+  import('@/pages/member/profile').then((m) => ({ default: m.ProfilePage })),
+)
+const NotificationsPage = lazy(() =>
+  import('@/pages/member/notifications').then((m) => ({
+    default: m.NotificationsPage,
+  })),
+)
+const SettingsPage = lazy(() =>
+  import('@/pages/member/settings').then((m) => ({ default: m.SettingsPage })),
+)
+const MessagesPage = lazy(() =>
+  import('@/pages/member/messages').then((m) => ({ default: m.MessagesPage })),
+)
+const ConversationPage = lazy(() =>
+  import('@/pages/member/conversation').then((m) => ({
+    default: m.ConversationPage,
+  })),
+)
+const MentorshipRelationshipsPage = lazy(() =>
+  import('@/pages/member/mentorship-relationships').then((m) => ({
+    default: m.MentorshipRelationshipsPage,
+  })),
+)
+const MentorProfilePage = lazy(() =>
+  import('@/pages/member/mentor-profile').then((m) => ({
+    default: m.MentorProfilePage,
+  })),
+)
+const MentorWorkspacePage = lazy(() =>
+  import('@/pages/member/mentor-workspace').then((m) => ({
+    default: m.MentorWorkspacePage,
+  })),
+)
+const EmployerWorkspacePage = lazy(() =>
+  import('@/pages/member/employer-workspace').then((m) => ({
+    default: m.EmployerWorkspacePage,
+  })),
+)
+const JobDetailsPage = lazy(() =>
+  import('@/pages/member/job-details').then((m) => ({
+    default: m.JobDetailsPage,
+  })),
+)
+const EventDetailsPage = lazy(() =>
+  import('@/pages/member/event-details').then((m) => ({
+    default: m.EventDetailsPage,
+  })),
+)
+const AdminDashboardPage = lazy(() =>
+  import('@/pages/admin/dashboard').then((m) => ({
+    default: m.AdminDashboardPage,
+  })),
+)
+const AdminCommandCenterPage = lazy(() =>
+  import('@/pages/admin/institutional-command-center').then((m) => ({
+    default: m.AdminCommandCenterPage,
+  })),
+)
+const AdminUsersPage = lazy(() =>
+  import('@/pages/admin/users').then((m) => ({ default: m.AdminUsersPage })),
+)
+const AdminEventAdministrationPage = lazy(() =>
+  import('@/pages/admin/event-administration').then((m) => ({
+    default: m.AdminEventAdministrationPage,
+  })),
+)
+const AdminJobAdministrationPage = lazy(() =>
+  import('@/pages/admin/job-administration').then((m) => ({
+    default: m.AdminJobAdministrationPage,
+  })),
+)
+const AdminMentorshipOverviewPage = lazy(() =>
+  import('@/pages/admin/mentorship-overview').then((m) => ({
+    default: m.AdminMentorshipOverviewPage,
+  })),
+)
+const AdminRolesMatrixPage = lazy(() =>
+  import('@/pages/admin/roles-matrix').then((m) => ({
+    default: m.AdminRolesMatrixPage,
+  })),
+)
+const AdminAnalyticsPage = lazy(() =>
+  import('@/pages/admin/analytics').then((m) => ({
+    default: m.AdminAnalyticsPage,
+  })),
+)
+const AdminProfilePage = lazy(() =>
+  import('@/pages/admin/profile').then((m) => ({
+    default: m.AdminProfilePage,
+  })),
+)
+const AdminSettingsPage = lazy(() =>
+  import('@/pages/admin/settings').then((m) => ({
+    default: m.AdminSettingsPage,
+  })),
+)
 
 const GUARD_POLICY_STORAGE_KEY = 'siba_guard_policy_v1'
 export type GuardEnforcementMode = 'forbidden' | 'dashboard'
@@ -521,7 +610,15 @@ function AnimatedRouteShell() {
             exit="exit"
             className="min-h-screen"
           >
-            <Outlet />
+            <Suspense
+              fallback={
+                <div className="min-h-[60vh] w-full flex items-center justify-center">
+                  <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                </div>
+              }
+            >
+              <Outlet />
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </GlobalSearchProvider>

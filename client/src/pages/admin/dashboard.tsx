@@ -2,6 +2,8 @@ import { RoleShell } from '@/components/layout/role-shell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { CampusNewsTicker } from '@/components/ui/campus-news-ticker'
+import { PerformanceSummaryCard } from '@/components/admin/PerformanceSummaryCard'
+import { InstitutionalAnalyticsModule } from '@/pages/admin/analytics'
 import {
   MENTORS_CATALOG,
   loadMentorshipRequests,
@@ -12,6 +14,7 @@ import {
   loadJobApplications,
 } from '@/lib/role-context'
 import { toast } from '@/lib/toast'
+import { api } from '@/services/api'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   ArrowUpRight,
@@ -28,7 +31,7 @@ import {
   Users,
   XCircle,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 interface ModerationQueueItem {
@@ -107,6 +110,34 @@ export function AdminDashboardPage() {
     },
   ])
 
+  useEffect(() => {
+    void api
+      .get<{ queue?: ModerationQueueItem[]; auditLogs?: any[] }>('/admin/moderation')
+      .then((res) => {
+        if (Array.isArray(res?.queue) && res.queue.length > 0) {
+          setModerationQueue(res.queue)
+        }
+        if (Array.isArray(res?.auditLogs) && res.auditLogs.length > 0) {
+          setAuditLogs(
+            res.auditLogs.slice(0, 8).map((l: any) => ({
+              id: l.id,
+              actor: l.user?.name ? `${l.user.name} (ADMIN)` : 'Usman Khan (SUPER_ADMIN)',
+              action: l.action,
+              time: l.createdAt
+                ? new Date(l.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : 'Just now',
+            }))
+          )
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   const handleConfirmModeration = () => {
     if (!confirmingItem) return
     const { item, decision } = confirmingItem
@@ -124,6 +155,13 @@ export function AdminDashboardPage() {
       },
       ...prev,
     ])
+    void api
+      .post(`/admin/moderation/${item.id}/decide`, {
+        decision,
+        reason: moderationReason.trim(),
+        title: item.title,
+      })
+      .catch(() => {})
     setConfirmingItem(null)
     setModerationReason('')
     toast({
@@ -255,6 +293,9 @@ export function AdminDashboardPage() {
         ))}
       </section>
 
+      {/* 1.5 24-Hour API Error Rate & Performance Summary Card (From Performance Logging Middleware) */}
+      <PerformanceSummaryCard />
+
       {/* 2. Pending Verification & Moderation Queue + Audit Log */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-7 rounded-2xl border border-border bg-card p-6 shadow-card space-y-4">
@@ -359,6 +400,9 @@ export function AdminDashboardPage() {
           </div>
         </div>
       </section>
+
+      {/* 2.5 Embedded Institutional Analytics & Telemetry Module */}
+      <InstitutionalAnalyticsModule embedded={true} />
 
       {/* 3. Administrative Modules Directory */}
       <section className="space-y-4">

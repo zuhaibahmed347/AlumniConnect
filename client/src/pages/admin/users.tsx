@@ -3,6 +3,7 @@ import { Input, SelectField } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ThemeSwitcher } from '@/components/ui/theme-switcher'
 import { toast } from '@/lib/toast'
+import { api } from '@/services/api'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
@@ -25,7 +26,7 @@ export function AdminUsersPage() {
   useEffect(() => {
     const mockUsers = [
       {
-        id: '1',
+        id: 'user-alumni',
         name: 'Ahmed Hassan',
         email: 'ahmed.hassan@iba-suk.edu.pk',
         role: 'MEMBER',
@@ -40,54 +41,78 @@ export function AdminUsersPage() {
         },
       },
       {
-        id: '2',
-        name: 'Saba Ahmed',
-        email: 'saba.ahmed@iba-suk.edu.pk',
+        id: 'user-student',
+        name: 'Zainab Magsi',
+        email: 'zainab.magsi.bscs22@iba-suk.edu.pk',
         role: 'MEMBER',
-        status: 'PENDING_VERIFICATION',
-        emailVerified: false,
+        status: 'ACTIVE',
+        emailVerified: true,
         createdAt: new Date('2024-01-10'),
-        lastLoginAt: null,
+        lastLoginAt: new Date(),
         profile: {
-          headline: 'Marketing Manager at MegaCorp',
-          graduationYear: 2019,
-          location: 'Lahore, Pakistan',
+          headline: 'Final-Year BSCS Scholar at Sukkur IBA University',
+          graduationYear: 2026,
+          location: 'Sukkur, Pakistan',
         },
       },
       {
-        id: '3',
+        id: 'user-admin',
         name: 'Usman Khan',
-        email: 'usman.khan@iba-suk.edu.pk',
-        role: 'ADMIN',
+        email: 'admin.alumni@iba-suk.edu.pk',
+        role: 'SUPER_ADMIN',
         status: 'ACTIVE',
         emailVerified: true,
         createdAt: new Date('2019-06-20'),
         lastLoginAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
         profile: {
-          headline: 'Data Scientist at DataInsights',
+          headline: 'Director of Alumni Relations · Sukkur IBA',
           graduationYear: 2018,
-          location: 'Islamabad, Pakistan',
+          location: 'Sukkur, Pakistan',
         },
       },
       {
-        id: '4',
+        id: 'user-fatima',
         name: 'Fatima Shah',
         email: 'fatima.shah@iba-suk.edu.pk',
         role: 'MEMBER',
-        status: 'SUSPENDED',
+        status: 'PENDING_VERIFICATION',
         emailVerified: true,
         createdAt: new Date('2021-03-05'),
         lastLoginAt: null,
         profile: {
-          headline: 'HR Manager at HumaneCorp',
+          headline: 'Senior Data Scientist at CureMD',
           graduationYear: 2021,
-          location: 'Karachi, Pakistan',
+          location: 'Lahore, Pakistan',
         },
       },
     ]
 
-    setUsers(mockUsers)
-  }, [])
+    void api
+      .list<any>('/admin/users', {
+        query: {
+          search: filters.search || undefined,
+          role: filters.role || undefined,
+          status: filters.status || undefined,
+          page: filters.page,
+          limit: filters.limit,
+        },
+      })
+      .then((res) => {
+        if (res.items && res.items.length > 0) {
+          setUsers(
+            res.items.map((u) => ({
+              ...u,
+              createdAt: u.createdAt ? new Date(u.createdAt) : new Date(),
+            }))
+          )
+        } else {
+          setUsers(mockUsers)
+        }
+      })
+      .catch(() => {
+        setUsers(mockUsers)
+      })
+  }, [filters])
 
   const onSubmit = (data: any) => {
     const newPage = data.page != null ? Number(data.page) : filters.page
@@ -264,13 +289,26 @@ export function AdminUsersPage() {
                             variant="ghost"
                             size="sm"
                             className="text-warning hover:text-warning/80 ml-1"
-                            onClick={() =>
+                            onClick={() => {
+                              const nextStatus =
+                                user.status === 'SUSPENDED' ? 'ACTIVE' : 'SUSPENDED'
+                              setUsers((prev) =>
+                                prev.map((u) =>
+                                  u.id === user.id ? { ...u, status: nextStatus } : u
+                                )
+                              )
+                              void api
+                                .patch(`/admin/users/${user.id}`, { status: nextStatus })
+                                .catch(() => {})
                               toast({
-                                title: user.status === 'SUSPENDED' ? 'User Reactivated' : 'User Suspended',
-                                description: `Account status updated for ${user.name}.`,
+                                title:
+                                  nextStatus === 'ACTIVE'
+                                    ? 'User Reactivated'
+                                    : 'User Suspended',
+                                description: `Account status updated to ${nextStatus} for ${user.name}.`,
                                 variant: 'default',
                               })
-                            }
+                            }}
                           >
                             {user.status === 'SUSPENDED' ? 'Reactivate' : 'Suspend'}
                           </Button>

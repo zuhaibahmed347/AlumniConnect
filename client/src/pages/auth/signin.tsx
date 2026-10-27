@@ -4,8 +4,13 @@ import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { loginSchema } from '@alumni-connect/shared/schemas'
+import {
+  AUTH_PERSONAS,
+  authPersonaSchema,
+  loginSchema,
+  parseAuthPersona,
+  type LoginFormValues,
+} from '@alumni-connect/shared'
 import { useNavigate, Link } from 'react-router-dom'
 import { toast } from '@/lib/toast'
 import { api, setToken, ApiError } from '@/services/api'
@@ -22,7 +27,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, KeyRound, Lock, Mail, Sparkles } from 'lucide-react'
 
-type FormValues = z.infer<typeof loginSchema>
+type FormValues = LoginFormValues
 
 interface LoginResponse {
   user: { id: string; email: string; name: string; role: string }
@@ -101,17 +106,11 @@ const ROLE_SIGNIN_CONFIG: Record<
   },
 }
 
-const PERSONA_LIST: PlatformPersona[] = [
-  'STUDENT',
-  'ALUMNI',
-  'MENTOR',
-  'EMPLOYER',
-  'ADMIN',
-]
+const PERSONA_LIST: readonly PlatformPersona[] = AUTH_PERSONAS
 
 export function SignInPage() {
   const [selectedPersona, setSelectedPersona] = useState<PlatformPersona>(() =>
-    getActivePersona(),
+    parseAuthPersona(getActivePersona(), 'ALUMNI'),
   )
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -124,9 +123,11 @@ export function SignInPage() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(loginSchema),
+    mode: 'onTouched',
     defaultValues: {
       email: '',
       password: '',
+      persona: selectedPersona,
     },
   })
 
@@ -135,14 +136,17 @@ export function SignInPage() {
   const ActiveRoleIcon = PERSONA_ICONS[selectedPersona]
 
   const handleSelectPersona = (persona: PlatformPersona) => {
-    setSelectedPersona(persona)
-    setActivePersona(persona)
+    const validatedPersona = authPersonaSchema.parse(persona)
+    setSelectedPersona(validatedPersona)
+    setActivePersona(validatedPersona)
+    setValue('persona', validatedPersona, { shouldValidate: true })
   }
 
   const handleLaunchInstantDemo = (persona: PlatformPersona) => {
-    const cfg = ROLE_SIGNIN_CONFIG[persona]
+    const validatedPersona = authPersonaSchema.parse(persona)
+    const cfg = ROLE_SIGNIN_CONFIG[validatedPersona]
     setToken(cfg.token)
-    setActivePersona(persona)
+    setActivePersona(validatedPersona)
     toast.success(`Signed into ${cfg.portalName}`)
     navigate(cfg.route)
   }
@@ -150,6 +154,7 @@ export function SignInPage() {
   const handleAutofillDemoCredentials = () => {
     setValue('email', activeConfig.demoEmail, { shouldValidate: true })
     setValue('password', 'SukkurIBA@2026', { shouldValidate: true })
+    setValue('persona', selectedPersona, { shouldValidate: true })
     toast({
       title: `${activeSlide.shortLabel} Credentials Populated`,
       description: 'Click Sign In or Launch Instant Demo Session below.',
@@ -162,6 +167,7 @@ export function SignInPage() {
       const res = await api.post<LoginResponse>('/auth/login', {
         email: data.email,
         password: data.password,
+        persona: data.persona ?? selectedPersona,
       })
       setToken(res.accessToken)
       const isAdmin = ADMIN_ROLES.has(res.user.role)
@@ -303,7 +309,11 @@ export function SignInPage() {
         </AnimatePresence>
 
         {/* Sign In Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+          <input type="hidden" {...register('persona')} />
+          {errors.persona && (
+            <p className="text-xs text-error">{errors.persona.message}</p>
+          )}
           {/* Email */}
           <div>
             <label

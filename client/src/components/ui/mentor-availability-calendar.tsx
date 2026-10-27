@@ -22,6 +22,7 @@ import type {
   StoredMentorshipRequest,
 } from '@/lib/mentorship-data'
 import { cn } from '@/lib/utils'
+import { syncPlatformStateKey } from '@/services/api'
 
 const CUSTOM_SLOTS_STORAGE_KEY = 'siba_mentor_custom_slots_v1'
 
@@ -228,6 +229,7 @@ export function saveMentorCustomSlots(
       CUSTOM_SLOTS_STORAGE_KEY,
       JSON.stringify(parsed),
     )
+    syncPlatformStateKey('mentorCustomSlots', parsed)
     window.dispatchEvent(
       new CustomEvent('mentor-slots-updated', { detail: { mentorId, slots } }),
     )

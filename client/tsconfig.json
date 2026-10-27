@@ -18,6 +18,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
+      "@alumni-connect/shared": ["../shared/src/index.ts"],
       "@alumni-connect/shared/*": ["../shared/src/*"]
     }
   },

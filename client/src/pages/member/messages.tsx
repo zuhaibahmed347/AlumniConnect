@@ -1,8 +1,16 @@
 import { RoleShell } from '@/components/layout/role-shell'
 import { Button } from '@/components/ui/button'
+import {
+  MessageAttachmentsList,
+  StagedAttachmentsTray,
+  WhatsAppAttachmentPicker,
+  readFilesAsAttachments,
+} from '@/components/ui/chat-attachments'
 import { Input } from '@/components/ui/input'
 import { getActivePersona } from '@/lib/role-context'
 import { toast } from '@/lib/toast'
+import { api } from '@/services/api'
+import type { MessageAttachment } from '@alumni-connect/shared/types'
 import {
   AlertCircle,
   CheckCircle2,
@@ -12,9 +20,15 @@ import {
   Search,
   Send,
   ShieldCheck,
+  UploadCloud,
   UserCheck,
 } from 'lucide-react'
-import { useMemo, useState, type FormEvent } from 'react'
+import {
+  useMemo,
+  useState,
+  type DragEvent,
+  type FormEvent,
+} from 'react'
 import { Link } from 'react-router-dom'
 
 interface ChatMessageItem {
@@ -24,6 +38,7 @@ interface ChatMessageItem {
   content: string
   timestamp: string
   status: 'SENT' | 'DELIVERED' | 'FAILED'
+  attachments?: MessageAttachment[]
 }
 
 interface ThreadRecord {
@@ -39,6 +54,12 @@ interface ThreadRecord {
   lastTimestamp: string
   messages: ChatMessageItem[]
 }
+
+const SAMPLE_RFC_DATA_URL =
+  'data:text/markdown;charset=utf-8,' +
+  encodeURIComponent(
+    '# Distributed Systems Capstone RFC\n\n- Author: Sukkur IBA Final Year Cohort\n- Reviewer: Ahmed Hassan (TechCorp)\n- Architecture: Event-driven order settlement pipeline with idempotent consumers.\n',
+  )
 
 const INITIAL_THREADS: ThreadRecord[] = [
   {
@@ -59,16 +80,27 @@ const INITIAL_THREADS: ThreadRecord[] = [
         sender: 'ME',
         senderName: 'You',
         content:
-          'Salam Ahmed! Thank you for accepting my connection request. I am preparing for the TechCorp Graduate Software Engineer loop.',
+          'Salam Ahmed! Thank you for accepting my connection request. I am preparing for the TechCorp Graduate Software Engineer loop and attached my system design RFC draft.',
         timestamp: 'Yesterday · 6:15 PM',
         status: 'DELIVERED',
+        attachments: [
+          {
+            id: 'att-seed-1',
+            name: 'Distributed_Systems_Capstone_RFC_v2.md',
+            mimeType: 'text/markdown',
+            size: 18432,
+            extension: 'md',
+            url: SAMPLE_RFC_DATA_URL,
+            category: 'DOCUMENT',
+          },
+        ],
       },
       {
         id: 'm-2',
         sender: 'THEM',
         senderName: 'Ahmed Hassan',
         content:
-          'Walaikum Assalam! Glad to connect. Happy to review your distributed systems capstone RFC before Thursday’s mock interview!',
+          'Walaikum Assalam! Glad to connect. Happy to review your distributed systems capstone RFC before Thursday’s mock interview! Feel free to send over any format — PDFs, code archives, diagrams, or spreadsheets.',
         timestamp: '10:42 AM',
         status: 'DELIVERED',
       },
@@ -102,7 +134,8 @@ const INITIAL_THREADS: ThreadRecord[] = [
     id: '3',
     alumniId: '4',
     participantName: 'Kamran Mahar',
-    participantRole: 'Managing Director, Cloud Security · SovereignCloud (BSCS ’11)',
+    participantRole:
+      'Managing Director, Cloud Security · SovereignCloud (BSCS ’11)',
     participantChapter: 'Riyadh & GCC Chapter',
     avatar: '/images/avatars/kamran.jpg',
     unreadCount: 0,
@@ -119,6 +152,11 @@ export function MessagesPage() {
   const [selectedThreadId, setSelectedThreadId] = useState<string>('1')
   const [search, setSearch] = useState('')
   const [draft, setDraft] = useState('')
+  const [stagedAttachments, setStagedAttachments] = useState<
+    MessageAttachment[]
+  >([])
+  const [isReadingFiles, setIsReadingFiles] = useState(false)
+  const [isDraggingOver, setIsDraggingOver] = useState(false)
   const [simulateSendFailure, setSimulateSendFailure] = useState(false)
 
   const filteredThreads = useMemo(() => {
@@ -140,6 +178,9 @@ export function MessagesPage() {
     [threads, selectedThreadId, filteredThreads],
   )
 
+  const isLocked =
+    activeThread?.connectionState === 'CONNECTIONS_ONLY_LOCKED'
+
   const handleSelectThread = (id: string) => {
     setSelectedThreadId(id)
     setThreads((prev) =>
@@ -147,10 +188,63 @@ export function MessagesPage() {
     )
   }
 
+  const processSelectedFiles = async (fileList: FileList | File[]) => {
+    if (!fileList || fileList.length === 0) return
+    if (isLocked) {
+      toast.error(
+        'Cannot attach files: Connect with this alumnus first to unlock messaging.',
+      )
+      return
+    }
+    setIsReadingFiles(true)
+    try {
+      const parsed = await readFilesAsAttachments(fileList)
+      setStagedAttachments((prev) => [...prev, ...parsed])
+      toast.success(
+        `Attached ${parsed.length} ${parsed.length === 1 ? 'file' : 'files'} (${parsed.map((f) => f.name).join(', ')}).`,
+      )
+    } catch {
+      toast.error('Could not read one or more selected files. Please try again.')
+    } finally {
+      setIsReadingFiles(false)
+    }
+  }
+
+  const handleDragOver = (e: DragEvent<HTMLElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!isLocked) {
+      setIsDraggingOver(true)
+    }
+  }
+
+  const handleDragLeave = (e: DragEvent<HTMLElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingOver(false)
+  }
+
+  const handleDrop = (e: DragEvent<HTMLElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingOver(false)
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      void processSelectedFiles(e.dataTransfer.files)
+    }
+  }
+
+  const handleRemoveAttachment = (id: string) => {
+    setStagedAttachments((prev) => prev.filter((item) => item.id !== id))
+  }
+
+  const handleClearAttachments = () => {
+    setStagedAttachments([])
+  }
+
   const handleSendMessage = (e: FormEvent) => {
     e.preventDefault()
     const trimmed = draft.trim()
-    if (!trimmed || !activeThread) return
+    if ((!trimmed && stagedAttachments.length === 0) || !activeThread) return
 
     if (activeThread.connectionState === 'CONNECTIONS_ONLY_LOCKED') {
       toast.error(
@@ -159,6 +253,9 @@ export function MessagesPage() {
       return
     }
 
+    const attachmentsToSend =
+      stagedAttachments.length > 0 ? [...stagedAttachments] : undefined
+
     const newMsg: ChatMessageItem = {
       id: `msg-${Date.now()}`,
       sender: 'ME',
@@ -166,14 +263,19 @@ export function MessagesPage() {
       content: trimmed,
       timestamp: 'Just now',
       status: simulateSendFailure ? 'FAILED' : 'DELIVERED',
+      attachments: attachmentsToSend,
     }
+
+    const previewSummary =
+      trimmed ||
+      `Attached ${stagedAttachments.length} ${stagedAttachments.length === 1 ? 'file' : 'files'}: ${stagedAttachments.map((a) => a.name).join(', ')}`
 
     setThreads((prev) =>
       prev.map((t) =>
         t.id === activeThread.id
           ? {
               ...t,
-              lastPreview: trimmed,
+              lastPreview: previewSummary,
               lastTimestamp: 'Just now',
               messages: [...t.messages, newMsg],
             }
@@ -181,13 +283,28 @@ export function MessagesPage() {
       ),
     )
     setDraft('')
+    setStagedAttachments([])
 
     if (simulateSendFailure) {
       toast.error(
         'Message failed to send due to simulated network interruption. Use Retry on the message bubble.',
       )
     } else {
-      toast.success('Message delivered.')
+      void api
+        .post('/messages', {
+          conversationId: `conv-${activeThread.id}`,
+          content: trimmed,
+          messageType: attachmentsToSend ? 'FILE' : 'TEXT',
+          attachments: attachmentsToSend,
+        })
+        .catch(() => {
+          // Local thread state already updated optimistically
+        })
+      toast.success(
+        attachmentsToSend
+          ? `Message delivered with ${attachmentsToSend.length} ${attachmentsToSend.length === 1 ? 'attachment' : 'attachments'}.`
+          : 'Message delivered.',
+      )
     }
   }
 
@@ -321,7 +438,28 @@ export function MessagesPage() {
 
         {/* Right 8 Cols: Active Conversation Interface */}
         {activeThread && (
-          <section className="lg:col-span-8 rounded-2xl border border-border bg-card p-6 shadow-card flex flex-col justify-between min-h-[520px]">
+          <section
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`lg:col-span-8 relative rounded-2xl border bg-card p-6 shadow-card flex flex-col justify-between min-h-[540px] transition-colors ${
+              isDraggingOver
+                ? 'border-primary ring-2 ring-primary/30 bg-primary/5'
+                : 'border-border'
+            }`}
+          >
+            {isDraggingOver && !isLocked && (
+              <div className="pointer-events-none absolute inset-3 z-20 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-primary bg-background/90 backdrop-blur-xs p-6 text-center">
+                <UploadCloud className="h-10 w-10 text-primary mb-2 animate-bounce" />
+                <p className="font-display text-base font-bold text-foreground">
+                  Drop any file format to attach
+                </p>
+                <p className="text-xs font-mono text-secondary mt-1">
+                  PDF, Word, Excel, PowerPoint, ZIP/RAR, Images, Audio, Video, Source Code, CSV, JSON, or binary files
+                </p>
+              </div>
+            )}
+
             {/* Thread Header */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
               <div className="flex items-center gap-3">
@@ -390,7 +528,7 @@ export function MessagesPage() {
                     No messages in this thread yet
                   </p>
                   <p className="text-xs text-secondary">
-                    Introduce yourself and share your Sukkur IBA graduation cohort or career question below.
+                    Introduce yourself and share your Sukkur IBA graduation cohort, resume, or any project file below.
                   </p>
                 </div>
               ) : (
@@ -402,7 +540,7 @@ export function MessagesPage() {
                     }`}
                   >
                     <div
-                      className={`max-w-xl rounded-2xl border p-4 space-y-1.5 ${
+                      className={`max-w-xl w-full sm:w-auto rounded-2xl border p-4 space-y-2 ${
                         msg.status === 'FAILED'
                           ? 'border-destructive bg-destructive/10 text-foreground'
                           : msg.sender === 'ME'
@@ -416,7 +554,14 @@ export function MessagesPage() {
                         </span>
                         <span className="text-secondary">{msg.timestamp}</span>
                       </div>
-                      <p className="text-sm leading-relaxed">{msg.content}</p>
+
+                      {msg.content && (
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                          {msg.content}
+                        </p>
+                      )}
+
+                      <MessageAttachmentsList attachments={msg.attachments} />
 
                       {msg.status === 'FAILED' ? (
                         <div className="pt-2 flex items-center justify-between gap-3 border-t border-destructive/30 text-xs">
@@ -447,40 +592,58 @@ export function MessagesPage() {
               )}
             </div>
 
-            {/* Compose Bar */}
-            <form
-              onSubmit={handleSendMessage}
-              className="pt-4 border-t border-border flex items-center gap-2.5"
-            >
-              <Input
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                disabled={
-                  activeThread.connectionState === 'CONNECTIONS_ONLY_LOCKED'
-                }
-                placeholder={
-                  activeThread.connectionState === 'CONNECTIONS_ONLY_LOCKED'
-                    ? 'Connect with this alumnus above to compose a message...'
-                    : `Write a message to ${activeThread.participantName}...`
-                }
-                className="flex-1"
+            {/* Staged Attachments Preview Tray & Compose Bar */}
+            <div className="pt-4 border-t border-border space-y-3">
+              <StagedAttachmentsTray
+                attachments={stagedAttachments}
+                onRemove={handleRemoveAttachment}
+                onClearAll={handleClearAttachments}
               />
-              <Button
-                type="submit"
-                disabled={
-                  activeThread.connectionState === 'CONNECTIONS_ONLY_LOCKED' ||
-                  !draft.trim()
-                }
-              >
-                <Send className="h-3.5 w-3.5 mr-1.5" />
-                Send
-              </Button>
-            </form>
 
-            <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-secondary">
+              <form
+                onSubmit={handleSendMessage}
+                className="flex items-center gap-2"
+              >
+                <WhatsAppAttachmentPicker
+                  disabled={isLocked}
+                  isReadingFiles={isReadingFiles}
+                  onSelectFiles={(files) => {
+                    void processSelectedFiles(files)
+                  }}
+                />
+
+                <Input
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  disabled={isLocked}
+                  placeholder={
+                    isLocked
+                      ? 'Connect with this alumnus above to compose a message...'
+                      : stagedAttachments.length > 0
+                        ? `Add an optional note for your ${stagedAttachments.length} attached ${stagedAttachments.length === 1 ? 'file' : 'files'}...`
+                        : `Write a message or click + to choose audio, video, or any file for ${activeThread.participantName}...`
+                  }
+                  className="flex-1"
+                />
+
+                <Button
+                  type="submit"
+                  disabled={
+                    isLocked ||
+                    isReadingFiles ||
+                    (!draft.trim() && stagedAttachments.length === 0)
+                  }
+                >
+                  <Send className="h-3.5 w-3.5 mr-1.5" />
+                  Send
+                </Button>
+              </form>
+            </div>
+
+            <div className="pt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-secondary">
               <span className="inline-flex items-center gap-1">
                 <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-                Protected by Sukkur IBA AlumniConnect Messaging Guidelines
+                Click + to attach small audio, short video, photos, or any document format · Drag & drop enabled
               </span>
               <span>
                 Permission: {activeThread.connectionState.replace(/_/g, ' ')}

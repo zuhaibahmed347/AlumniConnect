@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
 import {
@@ -20,11 +20,14 @@ import {
 import { ThemeSwitcher } from '@/components/ui/theme-switcher'
 import { GlobalSearchTrigger } from '@/components/ui/global-search-bar'
 import {
+  loadEmployerJobs,
   loadJobApplications,
+  saveEmployerJobs,
   saveJobApplications,
   type StudentJobApplication,
 } from '@/lib/role-context'
 import { toast } from '@/lib/toast'
+import { api } from '@/services/api'
 import {
   JobBoardFilter,
   SUKKUR_IBA_JOB_LISTINGS,
@@ -52,6 +55,14 @@ export function JobsPage() {
   )
   const [requestedReferralIds, setRequestedReferralIds] = useState<string[]>([])
   const [showPostModal, setShowPostModal] = useState(false)
+
+  useEffect(() => {
+    const syncFromBackend = () => {
+      setApplications(loadJobApplications())
+    }
+    window.addEventListener('siba-backend-hydrated', syncFromBackend)
+    return () => window.removeEventListener('siba-backend-hydrated', syncFromBackend)
+  }, [])
 
   const [filters, setFilters] = useState<JobBoardFilterState>({
     search: '',
@@ -190,6 +201,7 @@ export function JobsPage() {
       const next = [newApp, ...applications]
       setApplications(next)
       saveJobApplications(next)
+      void api.post(`/jobs/${matchedJob.id}/apply`, newApp).catch(() => {})
       toast.success(`Updated "${matchedJob.title}" status to ${nextStatus}`)
       return
     }
@@ -213,6 +225,7 @@ export function JobsPage() {
     )
     setApplications(updated)
     saveJobApplications(updated)
+    void api.patch(`/jobs/applications/${itemId}`, { status: statusMap[nextStatus] }).catch(() => {})
     toast.success('Job application status updated.')
   }
 
@@ -325,6 +338,42 @@ export function JobsPage() {
     }
 
     setJobs((prev) => [createdJob, ...prev])
+    const employerJobs = loadEmployerJobs()
+    saveEmployerJobs([
+      {
+        id: createdJob.id,
+        title: createdJob.title,
+        company: createdJob.company,
+        department: createdJob.sectorLabel,
+        employmentType: 'FULL_TIME',
+        location: createdJob.location,
+        isRemote: createdJob.isRemote,
+        experienceLevel: 'MID_SENIOR',
+        salaryRange: createdJob.compensationDisplay,
+        applicationDeadline: createdJob.expiresAt.slice(0, 10),
+        applicationMethod: 'PLATFORM_ONE_CLICK',
+        status: 'PUBLISHED',
+        description: createdJob.description,
+        requirements: [createdJob.requirements],
+        skills: createdJob.techStack,
+        createdAt: new Date().toISOString().slice(0, 10),
+      },
+      ...employerJobs,
+    ])
+    void api.post('/jobs', {
+      title: createdJob.title,
+      company: createdJob.company,
+      description: createdJob.description,
+      requirements: createdJob.requirements,
+      benefits: createdJob.benefits,
+      location: createdJob.location,
+      isRemote: createdJob.isRemote,
+      employmentType: 'FULL_TIME',
+      salaryMin: createdJob.salaryMin,
+      salaryMax: createdJob.salaryMax,
+      salaryCurrency: 'USD',
+      status: 'ACTIVE',
+    }).catch(() => {})
     setShowPostModal(false)
     setNewRoleForm({
       title: '',

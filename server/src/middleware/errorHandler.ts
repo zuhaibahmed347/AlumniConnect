@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
 import { ZodError } from 'zod'
-import { Prisma } from '@prisma/client'
 import { AppError, isAppError, formatError } from '../utils/errors'
 import { errorResponse } from '../utils/response'
 import { config } from '../config'
@@ -30,21 +29,16 @@ export function errorHandler(
     return errorResponse(res, 'Validation failed', 400, 'VALIDATION_ERROR', { errors })
   }
 
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    if (error.code === 'P2002') {
-      const target = (error.meta?.target as string[])?.join(', ') || 'field'
-      return errorResponse(res, `A record with this ${target} already exists`, 409, 'DUPLICATE_ENTRY')
-    }
-    if (error.code === 'P2025') {
-      return errorResponse(res, 'Record not found', 404, 'NOT_FOUND')
-    }
-    if (error.code === 'P2003') {
-      return errorResponse(res, 'Foreign key constraint failed', 400, 'FOREIGN_KEY_ERROR')
-    }
+  const anyErr = error as Error & { code?: string; meta?: { target?: string[] } }
+  if (anyErr.code === 'P2002') {
+    const target = anyErr.meta?.target?.join(', ') || 'field'
+    return errorResponse(res, `A record with this ${target} already exists`, 409, 'DUPLICATE_ENTRY')
   }
-
-  if (error instanceof Prisma.PrismaClientValidationError) {
-    return errorResponse(res, 'Invalid data provided', 400, 'VALIDATION_ERROR')
+  if (anyErr.code === 'P2025') {
+    return errorResponse(res, 'Record not found', 404, 'NOT_FOUND')
+  }
+  if (anyErr.code === 'P2003') {
+    return errorResponse(res, 'Foreign key constraint failed', 400, 'FOREIGN_KEY_ERROR')
   }
 
   const formatted = formatError(error)

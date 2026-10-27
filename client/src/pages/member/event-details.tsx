@@ -16,10 +16,13 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { toast } from '@/lib/toast'
+import { api } from '@/services/api'
+import { useEventRsvpState } from '@/components/ui/interactive-event-card'
 
 export function EventDetailsPage() {
   const { eventId } = useParams<{ eventId: string }>()
   const navigate = useNavigate()
+  const { rsvpMap, toggleEventStatus } = useEventRsvpState()
 
   const [loading, setLoading] = useState(true)
   const [event, setEvent] = useState<any>(null)
@@ -81,8 +84,11 @@ export function EventDetailsPage() {
     }
 
     setEvent(catalog[id] ?? catalog['1'])
+    if (rsvpMap[id] === 'ATTENDING') {
+      setRegistrationStatus('registered')
+    }
     setLoading(false)
-  }, [eventId])
+  }, [eventId, rsvpMap])
 
   if (loading) {
     return (
@@ -389,7 +395,13 @@ export function EventDetailsPage() {
                 type="button"
                 size="lg"
                 onClick={() => {
-                  setRegistrationStatus(isAtCapacity ? 'waitlisted' : 'registered')
+                  const next = isAtCapacity ? 'waitlisted' : 'registered'
+                  setRegistrationStatus(next)
+                  toggleEventStatus(String(event.id), 'ATTENDING')
+                  void api.post(`/events/${event.id}/register`, {
+                    attendanceMode,
+                    dietaryPreference,
+                  }).catch(() => {})
                   toast.success('Your seat has been reserved! Pass sent to your email.')
                 }}
                 className="w-full h-11 text-sm"
@@ -405,6 +417,10 @@ export function EventDetailsPage() {
                 size="lg"
                 onClick={() => {
                   setRegistrationStatus('not-registered')
+                  if (rsvpMap[String(event.id)] === 'ATTENDING') {
+                    toggleEventStatus(String(event.id), 'ATTENDING')
+                  }
+                  void api.delete(`/events/${event.id}/register`).catch(() => {})
                   toast.success('Your reservation has been cancelled.')
                 }}
                 className="w-full h-11 text-sm"

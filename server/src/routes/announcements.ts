@@ -4,10 +4,9 @@ import { validateParams, validateBody, validateQuery } from '../middleware/valid
 import { asyncHandler } from '../utils/asyncHandler'
 import { successResponse, paginatedResponse, createdResponse, errorResponse } from '../utils/response'
 import { AppError } from '../utils/errors'
-import { idParamSchema, createAnnouncementSchema, updateAnnouncementSchema, paginationSchema } from '@alumni-connect/shared'
+import { idParamSchema, createAnnouncementSchema, updateAnnouncementSchema, paginationSchema, AnnouncementPriority } from '@alumni-connect/shared'
 import { requirePermission, AuthenticatedRequest } from '../middleware/auth'
 import { logAction } from '../middleware/auditLog'
-import { AnnouncementPriority } from '@prisma/client'
 
 const router = Router()
 

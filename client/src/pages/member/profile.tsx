@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/profile-completion-card'
 import { getActivePersona, setActivePersona } from '@/lib/role-context'
 import { toast } from '@/lib/toast'
+import { api, syncPlatformStateKey } from '@/services/api'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Award,
@@ -35,7 +36,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 type ProfileViewMode = 'STUDENT' | 'ALUMNI'
@@ -344,6 +345,23 @@ function saveStoredProfile(key: string, record: EditableProfileRecord): void {
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(key, JSON.stringify(record))
+    const stateKey =
+      key === STUDENT_PROFILE_STORAGE_KEY ? 'studentProfile' : 'alumniProfile'
+    syncPlatformStateKey(stateKey, record)
+    void api
+      .patch('/profiles/me', {
+        headline: record.headline,
+        bio: record.bio,
+        location: record.location,
+        website: record.portfolioUrl,
+        linkedinUrl: record.linkedinUrl,
+        githubUrl: record.githubUrl,
+        graduationYear: record.graduationYear,
+        degree: record.degree,
+        major: record.department,
+        isPublic: record.isPublic,
+      })
+      .catch(() => {})
   } catch {
     // Ignore storage quota errors
   }
@@ -365,6 +383,19 @@ export function ProfilePage() {
   const [alumniProfile, setAlumniProfile] = useState<EditableProfileRecord>(
     () => loadStoredProfile(ALUMNI_PROFILE_STORAGE_KEY, INITIAL_ALUMNI_PROFILE),
   )
+
+  useEffect(() => {
+    const syncProfiles = () => {
+      setStudentProfile(
+        loadStoredProfile(STUDENT_PROFILE_STORAGE_KEY, INITIAL_STUDENT_PROFILE),
+      )
+      setAlumniProfile(
+        loadStoredProfile(ALUMNI_PROFILE_STORAGE_KEY, INITIAL_ALUMNI_PROFILE),
+      )
+    }
+    window.addEventListener('siba-backend-hydrated', syncProfiles)
+    return () => window.removeEventListener('siba-backend-hydrated', syncProfiles)
+  }, [])
 
   const [studentChecklist, setStudentChecklist] = useState<
     ProfileChecklistItem[]

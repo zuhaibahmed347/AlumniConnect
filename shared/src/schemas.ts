@@ -1,111 +1,7 @@
 import { z } from 'zod'
 import { UserRole, UserStatus, EventStatus, JobStatus, EmploymentType, MentorshipStatus, AnnouncementPriority } from './types'
 
-export const PASSWORD_MIN_LENGTH = 8
-export const PASSWORD_MAX_LENGTH = 100
-export const PASSWORD_UPPERCASE_REGEX = /[A-Z]/
-export const PASSWORD_LOWERCASE_REGEX = /[a-z]/
-export const PASSWORD_NUMBER_REGEX = /[0-9]/
-export const PASSWORD_SPECIAL_CHAR_REGEX = /[!@#$%^&*(),.?":{}|<>_\-=+[\]\\;/~`']/
-
-export const strongPasswordSchema = z
-  .string()
-  .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
-  .max(PASSWORD_MAX_LENGTH, `Password must be at most ${PASSWORD_MAX_LENGTH} characters`)
-  .regex(PASSWORD_UPPERCASE_REGEX, 'Password must include at least one uppercase letter (A-Z)')
-  .regex(PASSWORD_LOWERCASE_REGEX, 'Password must include at least one lowercase letter (a-z)')
-  .regex(PASSWORD_NUMBER_REGEX, 'Password must include at least one number (0-9)')
-  .regex(
-    PASSWORD_SPECIAL_CHAR_REGEX,
-    'Password must include at least one special character (!@#$%^&*)',
-  )
-
-export interface PasswordStrengthEvaluation {
-  hasMinLength: boolean
-  hasMixedCase: boolean
-  hasNumber: boolean
-  hasSpecialChar: boolean
-  passwordsMatch: boolean
-  passedCount: number
-  totalRules: number
-  isStrong: boolean
-}
-
-export function evaluatePasswordStrength(
-  password: string,
-  confirmPassword?: string,
-): PasswordStrengthEvaluation {
-  const hasMinLength = password.length >= PASSWORD_MIN_LENGTH
-  const hasMixedCase =
-    PASSWORD_UPPERCASE_REGEX.test(password) &&
-    PASSWORD_LOWERCASE_REGEX.test(password)
-  const hasNumber = PASSWORD_NUMBER_REGEX.test(password)
-  const hasSpecialChar = PASSWORD_SPECIAL_CHAR_REGEX.test(password)
-  const hasConfirm = typeof confirmPassword === 'string'
-  const passwordsMatch = hasConfirm
-    ? hasMinLength && password === confirmPassword
-    : true
-
-  const ruleResults = hasConfirm
-    ? [hasMinLength, hasMixedCase, hasNumber, hasSpecialChar, passwordsMatch]
-    : [hasMinLength, hasMixedCase, hasNumber, hasSpecialChar]
-
-  const passedCount = ruleResults.filter(Boolean).length
-
-  return {
-    hasMinLength,
-    hasMixedCase,
-    hasNumber,
-    hasSpecialChar,
-    passwordsMatch,
-    passedCount,
-    totalRules: ruleResults.length,
-    isStrong: hasMinLength && hasMixedCase && hasNumber && hasSpecialChar,
-  }
-}
-
-export const registerSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: strongPasswordSchema,
-  name: z.string().min(2, 'Name must be at least 2 characters').max(100),
-})
-
-export const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-})
-
-export const forgotPasswordSchema = z.object({
-  email: z.string().email('Invalid email address'),
-})
-
-export const resetPasswordSchema = z.object({
-  token: z.string().min(6, 'Valid recovery verification token is required'),
-  password: strongPasswordSchema,
-})
-
-export const resetPasswordConfirmSchema = resetPasswordSchema
-  .extend({
-    confirmPassword: z.string().min(1, 'Confirm your password is required'),
-  })
-  .refine((values) => values.password === values.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  })
-
-export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: strongPasswordSchema,
-})
-
-export const changePasswordConfirmSchema = changePasswordSchema
-  .extend({
-    confirmPassword: z.string().min(1, 'Confirm your password is required'),
-  })
-  .refine((values) => values.newPassword === values.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  })
+export * from './schemas/auth'
 
 
 export const updateProfileSchema = z.object({
@@ -179,25 +75,50 @@ export const updateMentorshipProfileSchema = createMentorshipProfileSchema.parti
 })
 
 export const createMentorshipRequestSchema = z.object({
-  mentorId: z.string().uuid('Invalid mentor ID'),
+  mentorId: z.string().min(1, 'Invalid mentor ID'),
   message: z.string().min(20, 'Message must be at least 20 characters').max(2000),
 })
 
 export const respondToMentorshipRequestSchema = z.object({
-  requestId: z.string().uuid('Invalid request ID'),
+  requestId: z.string().min(1, 'Invalid request ID').optional(),
   status: z.enum([MentorshipStatus.ACCEPTED, MentorshipStatus.REJECTED]),
 })
 
 export const createConversationSchema = z.object({
   type: z.enum(['DIRECT', 'GROUP']),
   name: z.string().max(100).optional(),
-  participantIds: z.array(z.string().uuid()).min(1, 'At least one participant is required'),
+  participantIds: z.array(z.string().min(1)).min(1, 'At least one participant is required'),
+})
+
+export const messageAttachmentCategorySchema = z.enum([
+  'IMAGE',
+  'AUDIO',
+  'VIDEO',
+  'PDF',
+  'DOCUMENT',
+  'SPREADSHEET',
+  'PRESENTATION',
+  'ARCHIVE',
+  'CODE',
+  'DATA',
+  'FILE',
+])
+
+export const messageAttachmentSchema = z.object({
+  id: z.string().min(1, 'Attachment ID is required'),
+  name: z.string().min(1, 'File name is required').max(500),
+  mimeType: z.string().default('application/octet-stream'),
+  size: z.number().int().min(0, 'File size cannot be negative'),
+  extension: z.string().max(50).default(''),
+  url: z.string().min(1, 'Attachment URL or data URI is required'),
+  category: messageAttachmentCategorySchema.optional(),
 })
 
 export const sendMessageSchema = z.object({
-  conversationId: z.string().uuid('Invalid conversation ID'),
-  content: z.string().min(1, 'Message cannot be empty').max(10000),
+  conversationId: z.string().min(1, 'Invalid conversation ID'),
+  content: z.string().max(10000).default(''),
   messageType: z.enum(['TEXT', 'IMAGE', 'FILE']).default('TEXT'),
+  attachments: z.array(messageAttachmentSchema).max(20).optional(),
   metadata: z.record(z.unknown()).optional(),
 })
 
@@ -217,9 +138,9 @@ export const userFiltersSchema = z.object({
   search: z.string().optional(),
   role: z.nativeEnum(UserRole).optional(),
   status: z.nativeEnum(UserStatus).optional(),
-  graduationYear: z.number().int().optional(),
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(20),
+  graduationYear: z.coerce.number().int().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
   sortBy: z.string().optional(),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 })
@@ -227,11 +148,11 @@ export const userFiltersSchema = z.object({
 export const eventFiltersSchema = z.object({
   search: z.string().optional(),
   status: z.nativeEnum(EventStatus).optional(),
-  isVirtual: z.boolean().optional(),
-  startDateFrom: z.string().datetime().optional(),
-  startDateTo: z.string().datetime().optional(),
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(20),
+  isVirtual: z.union([z.boolean(), z.string()]).optional(),
+  startDateFrom: z.string().optional(),
+  startDateTo: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
   sortBy: z.string().optional(),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 })
@@ -240,24 +161,24 @@ export const jobFiltersSchema = z.object({
   search: z.string().optional(),
   status: z.nativeEnum(JobStatus).optional(),
   employmentType: z.nativeEnum(EmploymentType).optional(),
-  isRemote: z.boolean().optional(),
+  isRemote: z.union([z.boolean(), z.string()]).optional(),
   location: z.string().optional(),
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(20),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
   sortBy: z.string().optional(),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 })
 
 export const alumniFiltersSchema = z.object({
   search: z.string().optional(),
-  graduationYear: z.number().int().optional(),
+  graduationYear: z.coerce.number().int().optional(),
   degree: z.string().optional(),
   major: z.string().optional(),
   location: z.string().optional(),
   industry: z.string().optional(),
-  skills: z.array(z.string()).optional(),
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(20),
+  skills: z.union([z.array(z.string()), z.string()]).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
   sortBy: z.string().optional(),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 })
@@ -288,7 +209,7 @@ export const experienceSchema = z.object({
 export const experienceUpdateSchema = experienceSchema.partial()
 
 export const profileSkillSchema = z.object({
-  skillId: z.string().uuid('Invalid skill ID'),
+  skillId: z.string().min(1, 'Invalid skill ID'),
   proficiency: z.number().int().min(1).max(5).default(1),
 })
 
@@ -300,7 +221,7 @@ export const userUpdateSchema = z.object({
 })
 
 export const addParticipantSchema = z.object({
-  userId: z.string().uuid('Invalid user ID'),
+  userId: z.string().min(1, 'Invalid user ID'),
 })
 
 export const updateMessageSchema = z.object({
@@ -308,12 +229,12 @@ export const updateMessageSchema = z.object({
 })
 
 export const paginationSchema = z.object({
-  page: z.number().int().min(1).default(1),
-  limit: z.number().int().min(1).max(100).default(20),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 })
 
 export const idParamSchema = z.object({
-  id: z.string().uuid('Invalid ID format'),
+  id: z.string().min(1, 'Invalid ID format'),
 })
 
 export const slugParamSchema = z.object({

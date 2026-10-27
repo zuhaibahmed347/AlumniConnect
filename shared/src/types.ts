@@ -73,6 +73,18 @@ export const AnnouncementPriority = {
   URGENT: 'URGENT',
 } as const
 export type AnnouncementPriority = (typeof AnnouncementPriority)[keyof typeof AnnouncementPriority]
+export const ConversationType = {
+  DIRECT: 'DIRECT',
+  GROUP: 'GROUP',
+} as const
+export type ConversationType = (typeof ConversationType)[keyof typeof ConversationType]
+export const MessageType = {
+  TEXT: 'TEXT',
+  IMAGE: 'IMAGE',
+  FILE: 'FILE',
+  SYSTEM: 'SYSTEM',
+} as const
+export type MessageType = (typeof MessageType)[keyof typeof MessageType]
 export interface User {
   id: string
   email: string
@@ -253,12 +265,36 @@ export interface ConversationParticipant {
   lastReadAt?: Date
 }
 
+export type MessageAttachmentCategory =
+  | 'IMAGE'
+  | 'AUDIO'
+  | 'VIDEO'
+  | 'PDF'
+  | 'DOCUMENT'
+  | 'SPREADSHEET'
+  | 'PRESENTATION'
+  | 'ARCHIVE'
+  | 'CODE'
+  | 'DATA'
+  | 'FILE'
+
+export interface MessageAttachment {
+  id: string
+  name: string
+  mimeType: string
+  size: number
+  extension: string
+  url: string
+  category?: MessageAttachmentCategory
+}
+
 export interface Message {
   id: string
   conversationId: string
   senderId: string
   content: string
   messageType: 'TEXT' | 'IMAGE' | 'FILE' | 'SYSTEM'
+  attachments?: MessageAttachment[]
   metadata?: Record<string, unknown>
   createdAt: Date
   updatedAt: Date
@@ -450,8 +486,9 @@ export interface CreateConversationInput {
 
 export interface SendMessageInput {
   conversationId: string
-  content: string
+  content?: string
   messageType?: 'TEXT' | 'IMAGE' | 'FILE'
+  attachments?: MessageAttachment[]
   metadata?: Record<string, unknown>
 }
 

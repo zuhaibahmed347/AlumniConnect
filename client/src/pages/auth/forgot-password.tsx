@@ -4,8 +4,13 @@ import { cn } from '@/lib/utils'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { forgotPasswordSchema } from '@alumni-connect/shared/schemas'
+import {
+  AUTH_PERSONAS,
+  authPersonaSchema,
+  forgotPasswordSchema,
+  parseAuthPersona,
+  type ForgotPasswordFormValues,
+} from '@alumni-connect/shared'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from '@/lib/toast'
 import { api, ApiError } from '@/services/api'
@@ -32,7 +37,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 
-type FormValues = z.infer<typeof forgotPasswordSchema>
+type FormValues = ForgotPasswordFormValues
 
 interface ForgotPasswordResponse {
   message: string
@@ -66,13 +71,7 @@ const ROLE_RECOVERY_EMAILS: Record<
   },
 }
 
-const PERSONA_LIST: PlatformPersona[] = [
-  'STUDENT',
-  'ALUMNI',
-  'MENTOR',
-  'EMPLOYER',
-  'ADMIN',
-]
+const PERSONA_LIST: readonly PlatformPersona[] = AUTH_PERSONAS
 
 export function ForgotPasswordPage() {
   const [searchParams] = useSearchParams()
@@ -80,7 +79,7 @@ export function ForgotPasswordPage() {
   const initialEmail = searchParams.get('email') ?? ''
 
   const [selectedPersona, setSelectedPersona] = useState<PlatformPersona>(() =>
-    getActivePersona(),
+    parseAuthPersona(getActivePersona(), 'ALUMNI'),
   )
   const [isLoading, setIsLoading] = useState(false)
   const [sent, setSent] = useState(false)
@@ -95,7 +94,8 @@ export function ForgotPasswordPage() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(forgotPasswordSchema),
-    defaultValues: { email: initialEmail },
+    mode: 'onTouched',
+    defaultValues: { email: initialEmail, persona: selectedPersona },
   })
 
   useEffect(() => {
@@ -105,16 +105,19 @@ export function ForgotPasswordPage() {
   }, [initialEmail, setValue])
 
   const handlePersonaChange = (persona: PlatformPersona) => {
-    setSelectedPersona(persona)
-    setActivePersona(persona)
+    const validatedPersona = authPersonaSchema.parse(persona)
+    setSelectedPersona(validatedPersona)
+    setActivePersona(validatedPersona)
+    setValue('persona', validatedPersona, { shouldValidate: true })
   }
 
   const handleFillPersonaEmail = (persona: PlatformPersona) => {
-    handlePersonaChange(persona)
-    const presetEmail = ROLE_RECOVERY_EMAILS[persona].email
+    const validatedPersona = authPersonaSchema.parse(persona)
+    handlePersonaChange(validatedPersona)
+    const presetEmail = ROLE_RECOVERY_EMAILS[validatedPersona].email
     setValue('email', presetEmail, { shouldValidate: true })
     toast({
-      title: `${AUTH_PERSONA_SLIDES[persona].shortLabel} Recovery Email Filled`,
+      title: `${AUTH_PERSONA_SLIDES[validatedPersona].shortLabel} Recovery Email Filled`,
       description: `Populated ${presetEmail} for password recovery.`,
     })
   }
@@ -262,7 +265,8 @@ export function ForgotPasswordPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+          <input type="hidden" {...register('persona')} />
           {sent ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.97 }}

@@ -51,7 +51,21 @@ router.get('/', validateQuery(alumniFiltersSchema), asyncHandler(async (req: Aut
     prisma.profile.count({ where }),
   ])
 
-  paginatedResponse(res, profiles, total, page, limit)
+  const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user?.role || '')
+  const sanitizedProfiles = profiles.map((p: any) => {
+    const canSeeEmail = p.showEmail || p.userId === req.user?.id || isAdmin
+    return {
+      ...p,
+      user: p.user
+        ? {
+            ...p.user,
+            email: canSeeEmail ? p.user.email : undefined,
+          }
+        : p.user,
+    }
+  })
+
+  paginatedResponse(res, sanitizedProfiles, total, page, limit)
 }))
 
 router.get('/:id', validateParams(idParamSchema), asyncHandler(async (req: AuthenticatedRequest, res) => {
@@ -67,16 +81,22 @@ router.get('/:id', validateParams(idParamSchema), asyncHandler(async (req: Authe
 
   if (!profile) throw AppError.notFound('Profile not found')
 
-  if (!profile.isPublic && profile.userId !== req.user?.id) {
-    const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user?.role || '')
-    if (!isAdmin) throw AppError.forbidden('Profile is private')
+  const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user?.role || '')
+  if (!profile.isPublic && profile.userId !== req.user?.id && !isAdmin) {
+    throw AppError.forbidden('Profile is private')
   }
 
   const isOwnProfile = profile.userId === req.user?.id
-  const showEmail = profile.showEmail || isOwnProfile
-  const showPhone = profile.showPhone || isOwnProfile
+  const showEmail = profile.showEmail || isOwnProfile || isAdmin
 
-  successResponse(res, { profile: { ...profile, user: { ...profile.user, email: showEmail ? profile.user.email : undefined } } })
+  successResponse(res, {
+    profile: {
+      ...profile,
+      user: profile.user
+        ? { ...profile.user, email: showEmail ? profile.user.email : undefined }
+        : profile.user,
+    },
+  })
 }))
 
 router.get('/skills/all', asyncHandler(async (req, res) => {
@@ -86,6 +106,35 @@ router.get('/skills/all', asyncHandler(async (req, res) => {
   })
 
   successResponse(res, { skills })
+}))
+
+router.post('/:id/connect', validateParams(idParamSchema), asyncHandler(async (req: AuthenticatedRequest, res) => {
+  const { id } = req.params
+  const profile = await prisma.profile.findUnique({
+    where: { id },
+    include: { user: { select: { id: true, name: true } } },
+  })
+
+  const targetUserId = profile?.userId || id
+  if (targetUserId === req.user!.id) {
+    throw AppError.badRequest('Cannot connect with yourself')
+  }
+
+  await prisma.notification.create({
+    data: {
+      userId: targetUserId,
+      type: 'SYSTEM',
+      title: 'New Alumni Connection Request',
+      message: `${req.user!.name} connected with you via the Sukkur IBA Alumni Directory.`,
+      data: { requesterId: req.user!.id },
+    },
+  })
+
+  successResponse(res, {
+    connected: true,
+    targetId: id,
+    message: 'Connection established',
+  })
 }))
 
 export default router

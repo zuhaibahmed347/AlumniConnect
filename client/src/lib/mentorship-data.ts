@@ -1,3 +1,5 @@
+import { syncPlatformStateKey } from '@/services/api'
+
 export type MentorshipGoalId =
   | 'ALL'
   | 'SYSTEMS_ENG'
@@ -814,6 +816,7 @@ export function saveMentorshipRequests(requests: StoredMentorshipRequest[]): voi
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(requests))
+    syncPlatformStateKey('mentorshipRequests', requests)
   } catch {
     // Ignore storage quota errors
   }
@@ -835,6 +838,7 @@ export function saveShortlistedMentorIds(ids: string[]): void {
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(SHORTLIST_STORAGE_KEY, JSON.stringify(ids))
+    syncPlatformStateKey('shortlistedMentorIds', ids)
   } catch {
     // Ignore storage quota errors
   }
@@ -856,6 +860,7 @@ export function saveEnrolledTrackIds(ids: string[]): void {
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(TRACKS_STORAGE_KEY, JSON.stringify(ids))
+    syncPlatformStateKey('enrolledTrackIds', ids)
   } catch {
     // Ignore storage quota errors
   }

@@ -16,6 +16,12 @@ import { Button } from '@/components/ui/button'
 import { ThemeSwitcher } from '@/components/ui/theme-switcher'
 import { toast } from '@/lib/toast'
 import { SUKKUR_IBA_JOB_LISTINGS } from '@/components/ui/job-board-filter'
+import {
+  loadJobApplications,
+  saveJobApplications,
+  type StudentJobApplication,
+} from '@/lib/role-context'
+import { api } from '@/services/api'
 
 export function JobDetailsPage() {
   const { jobId } = useParams<{ jobId: string }>()
@@ -29,7 +35,9 @@ export function JobDetailsPage() {
   }, [jobId])
 
   const [isSaved, setIsSaved] = useState(false)
-  const [hasApplied, setHasApplied] = useState(false)
+  const [hasApplied, setHasApplied] = useState(() =>
+    loadJobApplications().some((a) => a.jobId === (jobId || '1'))
+  )
   const [showApply, setShowApply] = useState(false)
   const [applicantNote, setApplicantNote] = useState('')
   const [portfolioLink, setPortfolioLink] = useState('')
@@ -62,6 +70,30 @@ export function JobDetailsPage() {
 
   const handleApplicationSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    const newApp: StudentJobApplication = {
+      id: `app-${Date.now()}`,
+      jobId: job.id,
+      jobTitle: job.title,
+      company: job.company,
+      location: job.location,
+      employmentType: job.employmentType,
+      appliedAt: new Date().toISOString().slice(0, 10),
+      status: 'SUBMITTED',
+      applicantName: 'Zainab Magsi',
+      applicantEmail: 'zainab.magsi.bscs22@iba-suk.edu.pk',
+      applicantMajor: 'BS Computer Science',
+      applicantGradYear: 2026,
+      applicantGpa: '3.76 / 4.00',
+      resumeUrl:
+        portfolioLink.trim() || 'https://iba-suk.edu.pk/portfolios/zainab-magsi-cv.pdf',
+      coverNote:
+        applicantNote.trim() ||
+        `Referral request submitted to ${job.referrerName} (${job.referrerCohort}).`,
+      skills: job.techStack,
+    }
+    const existing = loadJobApplications().filter((a) => a.jobId !== job.id)
+    saveJobApplications([newApp, ...existing])
+    void api.post(`/jobs/${job.id}/apply`, newApp).catch(() => {})
     setHasApplied(true)
     setShowApply(false)
     toast.success(

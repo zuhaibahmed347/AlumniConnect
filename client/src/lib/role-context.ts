@@ -1,9 +1,11 @@
-export type PlatformPersona =
-  | 'STUDENT'
-  | 'ALUMNI'
-  | 'MENTOR'
-  | 'EMPLOYER'
-  | 'ADMIN'
+import { bootstrapPlatformState, syncPlatformStateKey } from '@/services/api'
+import {
+  authPersonaSchema,
+  parseAuthPersona,
+  type AuthPersona,
+} from '@alumni-connect/shared/schemas/auth'
+
+export type PlatformPersona = AuthPersona
 
 export interface PersonaMeta {
   id: PlatformPersona
@@ -84,33 +86,32 @@ const EMPLOYER_ORG_STORAGE_KEY = 'siba_employer_org_v1'
 export function getActivePersona(): PlatformPersona {
   if (typeof window === 'undefined') return 'ALUMNI'
   const raw = window.localStorage.getItem(PERSONA_STORAGE_KEY)
-  if (
-    raw === 'STUDENT' ||
-    raw === 'ALUMNI' ||
-    raw === 'MENTOR' ||
-    raw === 'EMPLOYER' ||
-    raw === 'ADMIN'
-  ) {
-    return raw
-  }
-  return 'ALUMNI'
+  return parseAuthPersona(raw, 'ALUMNI')
 }
 
 export function setActivePersona(persona: PlatformPersona): void {
   if (typeof window === 'undefined') return
   try {
-    window.localStorage.setItem(PERSONA_STORAGE_KEY, persona)
-    // Ensure a demo session token exists so existing route guards do not unexpectedly bounce to /login
-    if (!window.localStorage.getItem('accessToken')) {
+    const validatedPersona = authPersonaSchema.parse(persona)
+    window.localStorage.setItem(PERSONA_STORAGE_KEY, validatedPersona)
+    const existingToken = window.localStorage.getItem('accessToken')
+    if (!existingToken || existingToken.startsWith('demo-session-')) {
       window.localStorage.setItem(
         'accessToken',
-        `demo-session-${persona.toLowerCase()}`,
+        `demo-session-${validatedPersona.toLowerCase()}`,
       )
     }
-    window.dispatchEvent(new CustomEvent('persona-changed', { detail: persona }))
+    window.dispatchEvent(
+      new CustomEvent('persona-changed', { detail: validatedPersona }),
+    )
+    bootstrapPlatformState()
   } catch {
     // Ignore storage errors
   }
+}
+
+if (typeof window !== 'undefined') {
+  bootstrapPlatformState()
 }
 
 export interface AlumniDetailedRecord {
@@ -505,6 +506,7 @@ export function saveAlumniProfileOverride(
       ALUMNI_OVERRIDES_STORAGE_KEY,
       JSON.stringify(overrides),
     )
+    syncPlatformStateKey('alumniOverrides', overrides)
   } catch {
     // Ignore storage quota errors
   }
@@ -527,6 +529,7 @@ export function saveConnectedAlumniIds(
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(CONNECTIONS_STORAGE_KEY, JSON.stringify(map))
+    syncPlatformStateKey('connectedAlumniIds', map)
   } catch {
     // Ignore
   }
@@ -635,6 +638,7 @@ export function saveJobApplications(apps: StudentJobApplication[]): void {
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(APPLICATIONS_STORAGE_KEY, JSON.stringify(apps))
+    syncPlatformStateKey('jobApplications', apps)
   } catch {
     // Ignore
   }
@@ -799,6 +803,7 @@ export function saveEmployerOrg(org: EmployerOrganizationProfile): void {
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(EMPLOYER_ORG_STORAGE_KEY, JSON.stringify(org))
+    syncPlatformStateKey('employerOrg', org)
   } catch {
     // Ignore
   }
@@ -828,6 +833,7 @@ export function saveEmployerJobs(jobs: EmployerJobPosting[]): void {
   if (typeof window === 'undefined') return
   try {
     window.localStorage.setItem(EMPLOYER_JOBS_STORAGE_KEY, JSON.stringify(jobs))
+    syncPlatformStateKey('employerJobs', jobs)
   } catch {
     // Ignore
   }

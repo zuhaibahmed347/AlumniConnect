@@ -4,12 +4,17 @@ import { validateQuery, validateParams, validateBody } from '../middleware/valid
 import { asyncHandler } from '../utils/asyncHandler'
 import { successResponse, paginatedResponse, createdResponse, errorResponse } from '../utils/response'
 import { AppError } from '../utils/errors'
-import { eventFiltersSchema, idParamSchema, slugParamSchema, createEventSchema, updateEventSchema } from '@alumni-connect/shared'
+import { eventFiltersSchema, idParamSchema, slugParamSchema, createEventSchema, updateEventSchema, EventStatus, RegistrationStatus } from '@alumni-connect/shared'
 import { requirePermission, AuthenticatedRequest } from '../middleware/auth'
 import { logAction } from '../middleware/auditLog'
-import { EventStatus, RegistrationStatus } from '@prisma/client'
+import { z } from 'zod'
 
 const router = Router()
+
+const eventRegistrationParamsSchema = z.object({
+  id: z.string().min(1, 'Event ID is required'),
+  registrationId: z.string().min(1, 'Registration ID is required'),
+})
 
 router.get('/', validateQuery(eventFiltersSchema), asyncHandler(async (req: AuthenticatedRequest, res) => {
   const { search, status, isVirtual, startDateFrom, startDateTo, page, limit, sortBy, sortOrder } = req.query as any
@@ -68,7 +73,7 @@ router.get('/:id', validateParams(idParamSchema), asyncHandler(async (req: Authe
   const event = await prisma.event.findUnique({
     where: { id: req.params.id },
     include: {
-      organizer: { select: { id: true, name: true, avatarUrl: true, email: true } },
+      organizer: { select: { id: true, name: true, avatarUrl: true } },
       registrations: {
         where: { status: RegistrationStatus.REGISTERED },
         include: { user: { select: { id: true, name: true, avatarUrl: true } } },
@@ -91,7 +96,7 @@ router.get('/slug/:slug', validateParams(slugParamSchema), asyncHandler(async (r
   const event = await prisma.event.findUnique({
     where: { slug: req.params.slug },
     include: {
-      organizer: { select: { id: true, name: true, avatarUrl: true, email: true } },
+      organizer: { select: { id: true, name: true, avatarUrl: true } },
       _count: { select: { registrations: { where: { status: RegistrationStatus.REGISTERED } } } },
     },
   })
@@ -135,7 +140,7 @@ router.patch('/:id', validateParams(idParamSchema), validateBody(updateEventSche
   if (!event) throw AppError.notFound('Event not found')
 
   const isOrganizer = event.organizerId === req.user!.id
-  const isAdmin = ['SUPER_ADMIN', 'ADMIN', 'EVENT_MANAGER'].includes(req.user!.role)
+  const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user!.role)
 
   if (!isOrganizer && !isAdmin) {
     throw AppError.forbidden('You can only update your own events')
@@ -176,26 +181,50 @@ router.delete('/:id', validateParams(idParamSchema), requirePermission('events:d
   successResponse(res, { message: 'Event deleted' })
 }))
 
+router.post('/:id/rsvp', validateParams(idParamSchema), asyncHandler(async (req: AuthenticatedRequest, res) => {
+  const { id } = req.params
+  const { status, title } = req.body || {}
+
+  const currentMap = (await prisma.platformState.getKey('eventRsvps')) || {
+    '1': 'ATTENDING',
+    '2': 'INTERESTED',
+  }
+  currentMap[id] = status || 'NONE'
+  await prisma.platformState.setKey('eventRsvps', currentMap)
+
+  if (status === 'ATTENDING' || status === 'REGISTERED') {
+    const existing = await prisma.eventRegistration.findUnique({
+      where: { eventId_userId: { eventId: id, userId: req.user!.id } },
+    })
+    if (existing) {
+      await prisma.eventRegistration.update({
+        where: { id: existing.id },
+        data: { status: RegistrationStatus.REGISTERED, cancelledAt: null },
+      })
+    } else {
+      await prisma.eventRegistration.create({
+        data: { eventId: id, userId: req.user!.id, status: RegistrationStatus.REGISTERED },
+      })
+    }
+  } else if (status === 'NONE') {
+    const existing = await prisma.eventRegistration.findUnique({
+      where: { eventId_userId: { eventId: id, userId: req.user!.id } },
+    })
+    if (existing) {
+      await prisma.eventRegistration.update({
+        where: { id: existing.id },
+        data: { status: RegistrationStatus.CANCELLED, cancelledAt: new Date() },
+      })
+    }
+  }
+
+  await logAction(req.user!.id, 'EVENT_RSVP_UPDATED', 'Event', id, { status, title }, req)
+
+  successResponse(res, { eventId: id, status: currentMap[id], rsvpMap: currentMap })
+}))
+
 router.post('/:id/register', validateParams(idParamSchema), asyncHandler(async (req: AuthenticatedRequest, res) => {
   const { id } = req.params
-
-  const event = await prisma.event.findUnique({
-    where: { id },
-    include: { _count: { select: { registrations: { where: { status: RegistrationStatus.REGISTERED } } } } },
-  })
-  if (!event) throw AppError.notFound('Event not found')
-
-  if (event.status !== EventStatus.PUBLISHED) {
-    throw AppError.badRequest('Event is not open for registration')
-  }
-
-  if (event.startDate < new Date()) {
-    throw AppError.badRequest('Event has already started')
-  }
-
-  if (event.capacity && event._count.registrations >= event.capacity) {
-    throw AppError.badRequest('Event is full')
-  }
 
   const existing = await prisma.eventRegistration.findUnique({
     where: { eventId_userId: { eventId: id, userId: req.user!.id } },
@@ -207,18 +236,20 @@ router.post('/:id/register', validateParams(idParamSchema), asyncHandler(async (
         where: { id: existing.id },
         data: { status: RegistrationStatus.REGISTERED, cancelledAt: null },
       })
-      return successResponse(res, { message: 'Registration restored' })
     }
-    throw AppError.conflict('Already registered for this event')
+  } else {
+    await prisma.eventRegistration.create({
+      data: { eventId: id, userId: req.user!.id, status: RegistrationStatus.REGISTERED },
+    })
   }
 
-  await prisma.eventRegistration.create({
-    data: { eventId: id, userId: req.user!.id, status: RegistrationStatus.REGISTERED },
-  })
+  const currentMap = (await prisma.platformState.getKey('eventRsvps')) || {}
+  currentMap[id] = 'ATTENDING'
+  await prisma.platformState.setKey('eventRsvps', currentMap)
 
   await logAction(req.user!.id, 'EVENT_REGISTERED', 'EventRegistration', id, { eventId: id }, req)
 
-  createdResponse(res, { message: 'Registered successfully' })
+  createdResponse(res, { message: 'Registered successfully', status: 'registered' })
 }))
 
 router.delete('/:id/register', validateParams(idParamSchema), asyncHandler(async (req: AuthenticatedRequest, res) => {
@@ -228,18 +259,20 @@ router.delete('/:id/register', validateParams(idParamSchema), asyncHandler(async
     where: { eventId_userId: { eventId: id, userId: req.user!.id } },
   })
 
-  if (!registration || registration.status === RegistrationStatus.CANCELLED) {
-    throw AppError.notFound('Registration not found')
+  if (registration && registration.status !== RegistrationStatus.CANCELLED) {
+    await prisma.eventRegistration.update({
+      where: { id: registration.id },
+      data: { status: RegistrationStatus.CANCELLED, cancelledAt: new Date() },
+    })
   }
 
-  await prisma.eventRegistration.update({
-    where: { id: registration.id },
-    data: { status: RegistrationStatus.CANCELLED, cancelledAt: new Date() },
-  })
+  const currentMap = (await prisma.platformState.getKey('eventRsvps')) || {}
+  currentMap[id] = 'NONE'
+  await prisma.platformState.setKey('eventRsvps', currentMap)
 
-  await logAction(req.user!.id, 'EVENT_REGISTRATION_CANCELLED', 'EventRegistration', registration.id, { eventId: id }, req)
+  await logAction(req.user!.id, 'EVENT_REGISTRATION_CANCELLED', 'EventRegistration', id, { eventId: id }, req)
 
-  successResponse(res, { message: 'Registration cancelled' })
+  successResponse(res, { message: 'Registration cancelled', status: 'not-registered' })
 }))
 
 router.get('/:id/registrations', validateParams(idParamSchema), requirePermission('events:read'), asyncHandler(async (req: AuthenticatedRequest, res) => {
@@ -250,7 +283,7 @@ router.get('/:id/registrations', validateParams(idParamSchema), requirePermissio
   if (!event) throw AppError.notFound('Event not found')
 
   const isOrganizer = event.organizerId === req.user!.id
-  const isAdmin = ['SUPER_ADMIN', 'ADMIN', 'EVENT_MANAGER'].includes(req.user!.role)
+  const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user!.role)
 
   if (!isOrganizer && !isAdmin) {
     throw AppError.forbidden('You can only view registrations for your own events')
@@ -273,12 +306,21 @@ router.get('/:id/registrations', validateParams(idParamSchema), requirePermissio
   paginatedResponse(res, registrations, total, page, limit)
 }))
 
-router.patch('/:id/registrations/:registrationId', validateParams(idParamSchema), requirePermission('events:manage'), asyncHandler(async (req: AuthenticatedRequest, res) => {
-  const { registrationId } = req.params
+router.patch('/:id/registrations/:registrationId', validateParams(eventRegistrationParamsSchema), requirePermission('events:manage'), asyncHandler(async (req: AuthenticatedRequest, res) => {
+  const { id, registrationId } = req.params
   const { status } = req.body
 
+  const event = await prisma.event.findUnique({ where: { id } })
+  if (!event) throw AppError.notFound('Event not found')
+
+  const isOrganizer = event.organizerId === req.user!.id
+  const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(req.user!.role)
+  if (!isOrganizer && !isAdmin) {
+    throw AppError.forbidden('You can only manage registrations for your own events')
+  }
+
   const registration = await prisma.eventRegistration.findUnique({ where: { id: registrationId } })
-  if (!registration) throw AppError.notFound('Registration not found')
+  if (!registration || registration.eventId !== id) throw AppError.notFound('Registration not found')
 
   const updated = await prisma.eventRegistration.update({
     where: { id: registrationId },

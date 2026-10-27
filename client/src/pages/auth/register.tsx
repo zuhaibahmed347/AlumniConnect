@@ -4,11 +4,14 @@ import { cn } from '@/lib/utils'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import {
   evaluatePasswordStrength,
-  registerSchema,
-} from '@alumni-connect/shared/schemas'
+  REGISTRATION_PERSONAS,
+  registerFormSchema,
+  registrationPersonaSchema,
+  type RegisterFormValues,
+  type RegistrationPersona,
+} from '@alumni-connect/shared'
 import { useNavigate, Link } from 'react-router-dom'
 import { toast } from '@/lib/toast'
 import { api, ApiError } from '@/services/api'
@@ -33,31 +36,9 @@ import {
   User,
 } from 'lucide-react'
 
-const formSchema = registerSchema
-  .extend({
-    confirmPassword: z.string().min(1, 'Confirm your password is required'),
-    graduationYear: z.coerce
-      .number()
-      .int('Graduation year must be a whole number')
-      .min(1950, 'Graduation year must be 1950 or later')
-      .max(new Date().getFullYear() + 6, 'Graduation year looks incorrect')
-      .optional()
-      .or(z.literal('').transform(() => undefined)),
-    department: z.string().max(100).optional(),
-  })
-  .refine((values) => values.password === values.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  })
+type FormValues = RegisterFormValues
 
-type FormValues = z.infer<typeof formSchema>
-
-const REGISTER_PERSONAS: PlatformPersona[] = [
-  'STUDENT',
-  'ALUMNI',
-  'MENTOR',
-  'EMPLOYER',
-]
+const REGISTER_PERSONAS: readonly RegistrationPersona[] = REGISTRATION_PERSONAS
 
 const REGISTER_ROLE_COPY: Record<
   PlatformPersona,
@@ -136,9 +117,10 @@ const REGISTER_ROLE_COPY: Record<
 }
 
 export function RegisterPage() {
-  const [selectedPersona, setSelectedPersona] = useState<PlatformPersona>(() => {
+  const [selectedPersona, setSelectedPersona] = useState<RegistrationPersona>(() => {
     const current = getActivePersona()
-    return current === 'ADMIN' ? 'ALUMNI' : current
+    const parsed = registrationPersonaSchema.safeParse(current)
+    return parsed.success ? parsed.data : 'ALUMNI'
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -152,7 +134,7 @@ export function RegisterPage() {
     watch,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(registerFormSchema),
     mode: 'onChange',
     defaultValues: {
       email: '',
@@ -160,6 +142,7 @@ export function RegisterPage() {
       confirmPassword: '',
       name: '',
       department: '',
+      persona: selectedPersona,
     },
   })
 
@@ -174,8 +157,11 @@ export function RegisterPage() {
   const roleCopy = REGISTER_ROLE_COPY[selectedPersona]
 
   const handlePersonaChange = (persona: PlatformPersona) => {
-    setSelectedPersona(persona)
-    setActivePersona(persona)
+    const parsed = registrationPersonaSchema.safeParse(persona)
+    const nextPersona: RegistrationPersona = parsed.success ? parsed.data : 'ALUMNI'
+    setSelectedPersona(nextPersona)
+    setActivePersona(nextPersona)
+    setValue('persona', nextPersona, { shouldValidate: true })
   }
 
   const handleFillStrongPassword = () => {
@@ -188,15 +174,21 @@ export function RegisterPage() {
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true)
     try {
+      const validatedPersona = registrationPersonaSchema.parse(
+        data.persona ?? selectedPersona,
+      )
       await api.post('/auth/register', {
         email: data.email,
         password: data.password,
         name: data.name,
+        persona: validatedPersona,
+        graduationYear: data.graduationYear,
+        department: data.department,
       })
-      setActivePersona(selectedPersona)
+      setActivePersona(validatedPersona)
       toast({
         title: 'Registration Successful',
-        description: `Your ${AUTH_PERSONA_SLIDES[selectedPersona].shortLabel} profile has been created. Please sign in.`,
+        description: `Your ${AUTH_PERSONA_SLIDES[validatedPersona].shortLabel} profile has been created. Please sign in.`,
         variant: 'success',
       })
       navigate('/login')
@@ -298,7 +290,11 @@ export function RegisterPage() {
         </AnimatePresence>
 
         {/* Registration Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+          <input type="hidden" {...register('persona')} />
+          {errors.persona && (
+            <p className="text-xs text-error">{errors.persona.message}</p>
+          )}
           {/* Full Name */}
           <div>
             <label

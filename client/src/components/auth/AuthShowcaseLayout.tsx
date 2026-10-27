@@ -1,8 +1,17 @@
 export {
   AuthShowcaseLayout,
   AuthPersonaSlide,
+  AuthVerificationFaqSection,
+  ACCOUNT_VERIFICATION_FAQS,
   AUTH_PERSONA_SLIDES,
   PERSONA_ICONS,
+  FAQ_QUICK_FILTER_TERMS,
+  FAQ_LIST_CONTAINER_VARIANTS,
+  FAQ_LIST_ITEM_VARIANTS,
+  formatPersonaSlideShareDetails,
   type AuthPersonaSlideProps,
+  type AuthVerificationFaqSectionProps,
+  type VerificationFaqItem,
+  type VerificationFaqCategory,
+  type PersonaSlideSharePayload,
 } from '@/components/layout/auth-showcase-layout'
-

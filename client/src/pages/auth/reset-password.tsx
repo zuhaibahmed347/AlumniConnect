@@ -4,11 +4,13 @@ import { cn } from '@/lib/utils'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import {
+  authPersonaSchema,
   evaluatePasswordStrength,
+  parseAuthPersona,
   resetPasswordConfirmSchema,
-} from '@alumni-connect/shared/schemas'
+  type ResetPasswordConfirmValues,
+} from '@alumni-connect/shared'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { toast } from '@/lib/toast'
 import { api, ApiError } from '@/services/api'
@@ -34,7 +36,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 
-type FormValues = z.infer<typeof resetPasswordConfirmSchema>
+type FormValues = ResetPasswordConfirmValues
 
 export function ResetPasswordPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -42,7 +44,7 @@ export function ResetPasswordPage() {
   const urlEmail = searchParams.get('email') ?? ''
 
   const [selectedPersona, setSelectedPersona] = useState<PlatformPersona>(() =>
-    getActivePersona(),
+    parseAuthPersona(getActivePersona(), 'ALUMNI'),
   )
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -82,8 +84,9 @@ export function ResetPasswordPage() {
   )
 
   const handlePersonaChange = (persona: PlatformPersona) => {
-    setSelectedPersona(persona)
-    setActivePersona(persona)
+    const validatedPersona = authPersonaSchema.parse(persona)
+    setSelectedPersona(validatedPersona)
+    setActivePersona(validatedPersona)
   }
 
   const handleGenerateInstantToken = () => {

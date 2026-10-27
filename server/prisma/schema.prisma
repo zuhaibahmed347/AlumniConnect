@@ -465,3 +465,22 @@ model AuditLog {
   @@index([createdAt])
   @@map("audit_logs")
 }
+
+model PerformanceLog {
+  id            String   @id @default(cuid())
+  method        String
+  route         String
+  statusCode    Int
+  durationMs    Float
+  cacheStatus   String   @default("BYPASS")
+  isError       Boolean  @default(false)
+  isClientError Boolean  @default(false)
+  isServerError Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  expiresAt     DateTime
+
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@index([route])
+  @@map("performance_logs")
+}

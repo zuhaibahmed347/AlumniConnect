@@ -4,11 +4,16 @@ import { validateParams, validateBody, validateQuery } from '../middleware/valid
 import { asyncHandler } from '../utils/asyncHandler'
 import { successResponse, paginatedResponse, createdResponse, errorResponse } from '../utils/response'
 import { AppError } from '../utils/errors'
-import { idParamSchema, createConversationSchema, paginationSchema, addParticipantSchema } from '@alumni-connect/shared'
+import { idParamSchema, createConversationSchema, paginationSchema, addParticipantSchema, ConversationType } from '@alumni-connect/shared'
 import { AuthenticatedRequest } from '../middleware/auth'
-import { ConversationType } from '@prisma/client'
+import { z } from 'zod'
 
 const router = Router()
+
+const participantParamsSchema = z.object({
+  id: z.string().min(1, 'Conversation ID is required'),
+  userId: z.string().min(1, 'User ID is required'),
+})
 
 router.get('/', validateQuery(paginationSchema), asyncHandler(async (req: AuthenticatedRequest, res) => {
   const { page, limit } = req.query as any
@@ -113,7 +118,7 @@ router.post('/:id/participants', validateParams(idParamSchema), validateBody(add
   createdResponse(res, { participant })
 }))
 
-router.delete('/:id/participants/:userId', validateParams(idParamSchema), asyncHandler(async (req: AuthenticatedRequest, res) => {
+router.delete('/:id/participants/:userId', validateParams(participantParamsSchema), asyncHandler(async (req: AuthenticatedRequest, res) => {
   const { id, userId } = req.params
 
   const conversation = await prisma.conversation.findUnique({ where: { id } })

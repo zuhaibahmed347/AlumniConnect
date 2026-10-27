@@ -20,6 +20,11 @@ import { useState, useEffect, type FormEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import { toast } from '@/lib/toast'
+import {
+  loadConnectedAlumniIds,
+  saveConnectedAlumniIds,
+} from '@/lib/role-context'
+import { api } from '@/services/api'
 
 const initialFilters = {
   search: '',
@@ -210,11 +215,27 @@ export function AlumniDirectoryPage() {
       setFilters((prev) => ({ ...prev, search: qParam }))
     }
   }, [searchParams])
-  const [connectedIds, setConnectedIds] = useState<Record<string, boolean>>({
-    '2': true,
-    '4': true,
-    '8': true,
+  const [connectedIds, setConnectedIds] = useState<Record<string, boolean>>(() => {
+    const stored = loadConnectedAlumniIds()
+    const map: Record<string, boolean> = { '2': true, '4': true, '8': true }
+    for (const [k, v] of Object.entries(stored)) {
+      if (v === 'CONNECTED' || v === 'PENDING') map[k] = true
+    }
+    return map
   })
+
+  useEffect(() => {
+    const syncConnections = () => {
+      const stored = loadConnectedAlumniIds()
+      const map: Record<string, boolean> = { '2': true, '4': true, '8': true }
+      for (const [k, v] of Object.entries(stored)) {
+        if (v === 'CONNECTED' || v === 'PENDING') map[k] = true
+      }
+      setConnectedIds(map)
+    }
+    window.addEventListener('siba-backend-hydrated', syncConnections)
+    return () => window.removeEventListener('siba-backend-hydrated', syncConnections)
+  }, [])
 
   const filteredAlumni = ALUMNI_DATA.filter((alum) => {
     const q = filters.search.trim().toLowerCase()
@@ -561,12 +582,23 @@ export function AlumniDirectoryPage() {
                     <div className="mt-5 pt-4 border-t border-border flex items-center justify-between">
                       <button
                         type="button"
-                        onClick={() =>
-                          setConnectedIds((prev) => ({
-                            ...prev,
-                            [alumni.id]: !prev[alumni.id],
-                          }))
-                        }
+                        onClick={() => {
+                          const nextVal = !connectedIds[alumni.id]
+                          const nextMap = {
+                            ...connectedIds,
+                            [alumni.id]: nextVal,
+                          }
+                          setConnectedIds(nextMap)
+                          const persisted: Record<string, 'CONNECTED' | 'PENDING'> = {}
+                          for (const [k, v] of Object.entries(nextMap)) {
+                            if (v) persisted[k] = 'CONNECTED'
+                          }
+                          saveConnectedAlumniIds(persisted)
+                          if (nextVal) {
+                            void api.post(`/alumni/${alumni.id}/connect`).catch(() => {})
+                            toast.success(`Connected with ${alumni.name}.`)
+                          }
+                        }}
                         className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                           isConnected
                             ? 'text-success'

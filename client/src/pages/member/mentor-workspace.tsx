@@ -31,7 +31,7 @@ import {
   Users,
   XCircle,
 } from 'lucide-react'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 type MentorConsoleTab =
@@ -73,6 +73,15 @@ export function MentorWorkspacePage() {
   const [slots, setSlots] = useState<MentorSessionSlot[]>(() =>
     loadMentorCustomSlots(defaultMentor.id, defaultMentor.officeHoursSlots),
   )
+
+  useEffect(() => {
+    const syncMentorState = () => {
+      setRequests(loadMentorshipRequests())
+      setSlots(loadMentorCustomSlots(defaultMentor.id, defaultMentor.officeHoursSlots))
+    }
+    window.addEventListener('siba-backend-hydrated', syncMentorState)
+    return () => window.removeEventListener('siba-backend-hydrated', syncMentorState)
+  }, [defaultMentor.id, defaultMentor.officeHoursSlots])
   const [newSlotDay, setNewSlotDay] = useState('Tue, Nov 24')
   const [newSlotTime, setNewSlotTime] = useState('19:00 PKT')
   const [newSlotFormat, setNewSlotFormat] =

@@ -31,7 +31,15 @@ import {
 } from 'framer-motion'
 import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Search, MapPin, Compass, Globe2 } from 'lucide-react'
+import {
+  ArrowRight,
+  Search,
+  MapPin,
+  Compass,
+  Globe2,
+  ChevronDown,
+  X,
+} from 'lucide-react'
 
 /**
  * Shared exponential settling curve and spring physics aligned with Apple-style
@@ -348,6 +356,158 @@ const upcomingEvents = [
   },
 ] as const
 
+export const FAQ_QUICK_FILTERS = [
+  'Verification',
+  'Mentorship',
+  'Employment',
+  'Events',
+  'Directory',
+] as const
+
+export type FaqQuickFilterTopic = (typeof FAQ_QUICK_FILTERS)[number]
+
+interface InstitutionalFaqItem {
+  id: string
+  category: FaqQuickFilterTopic
+  question: string
+  answer: string
+  keywords: string[]
+}
+
+const INSTITUTIONAL_FAQS: readonly InstitutionalFaqItem[] = [
+  {
+    id: 'faq-verification-1',
+    category: 'Verification',
+    question:
+      'How does Sukkur IBA AlumniConnect verify graduate credentials and CMS IDs?',
+    answer:
+      'Every registration is cross-checked against the Sukkur IBA University Registrar and Controller of Examinations ledger using your graduation cohort, degree discipline, and institutional CMS ID or CNIC. Most profiles are automatically verified within 2 hours, granting full access to the global directory, referrals, and chapter events.',
+    keywords: [
+      'verification',
+      'verified',
+      'cms id',
+      'registrar',
+      'degree',
+      'approval',
+      'credentials',
+    ],
+  },
+  {
+    id: 'faq-verification-2',
+    category: 'Verification',
+    question:
+      'Can final-year Sukkur IBA scholars and faculty members apply for verification?',
+    answer:
+      'Yes. Final-year undergraduate and postgraduate scholars can activate a Student Scholar account using their official @iba-suk.edu.pk email address to request mentorship and internship referrals. Faculty members and chapter patrons receive verified institutional badges.',
+    keywords: [
+      'verification',
+      'student',
+      'faculty',
+      'scholar',
+      'email',
+      'eligibility',
+    ],
+  },
+  {
+    id: 'faq-mentorship-1',
+    category: 'Mentorship',
+    question:
+      'How do 1-on-1 mentorship pairings and structured 6-month tracks work?',
+    answer:
+      'Once verified, members can browse 340+ active mentors by technical stack, industry sector, or fellowship track (Fulbright, DAAD, Erasmus, or Staff+ Engineering). You can book single 45-minute tactical office hours for architecture/resume reviews or enroll in a 6-month bi-weekly mentorship cohort at zero cost.',
+    keywords: [
+      'mentorship',
+      'mentor',
+      'pairing',
+      'office hours',
+      'coaching',
+      'fellowship',
+      'advisory',
+    ],
+  },
+  {
+    id: 'faq-mentorship-2',
+    category: 'Mentorship',
+    question:
+      'How can senior alumni volunteer as mentors and manage their availability?',
+    answer:
+      'Graduates with 3+ years of industry or academic research experience can enable Mentor Mode from their profile studio, set their monthly mentee capacity (1 to 5 scholars), and define preferred session slots and focus rubrics.',
+    keywords: [
+      'mentorship',
+      'volunteer',
+      'capacity',
+      'availability',
+      'mentor workspace',
+    ],
+  },
+  {
+    id: 'faq-employment-1',
+    category: 'Employment',
+    question:
+      'How do direct alumni job referrals and employment fast-tracking operate?',
+    answer:
+      'Roles listed on the AlumniConnect Job Board are posted directly by Sukkur IBA graduates serving as engineering managers, VPs, founders, or talent leads across 35+ partner firms. Clicking "Request Referral" routes your verified profile and portfolio directly to the alumni referrer, achieving a 94% response rate within 14 days.',
+    keywords: [
+      'employment',
+      'jobs',
+      'referral',
+      'hiring',
+      'career',
+      'recruiter',
+      'placement',
+    ],
+  },
+  {
+    id: 'faq-employment-2',
+    category: 'Employment',
+    question:
+      'Can alumni employers post international remote or relocation-sponsored employment roles?',
+    answer:
+      'Yes. Verified alumni recruiters and hiring managers in Pakistan, the UAE & Gulf, Europe, and North America can publish full-time, internship,remote, or visa-sponsored roles through the Employer Workspace at no cost.',
+    keywords: [
+      'employment',
+      'remote',
+      'relocation',
+      'employer',
+      'job board',
+      'compensation',
+    ],
+  },
+  {
+    id: 'faq-events-1',
+    category: 'Events',
+    question:
+      'How do I RSVP to Sukkur Campus reunions and international chapter summits?',
+    answer:
+      'Use the interactive Events Hub to filter gatherings by Sukkur Main Campus, Karachi, Islamabad, Dubai, London, or Hybrid Live Stream. Selecting "Attending" reserves your digital seat pass and syncs chapter logistics to your member dashboard.',
+    keywords: [
+      'events',
+      'reunion',
+      'chapter',
+      'rsvp',
+      'homecoming',
+      'seminar',
+      'summit',
+    ],
+  },
+  {
+    id: 'faq-directory-1',
+    category: 'Directory',
+    question:
+      'Are my contact details and employment history private inside the Alumni Directory?',
+    answer:
+      'Yes. The directory is strictly gated behind institutional authentication and RBAC route guards. You control whether your direct email, LinkedIn handle, and mentorship availability are visible to all verified cohorts or only to approved connections.',
+    keywords: [
+      'directory',
+      'privacy',
+      'security',
+      'visibility',
+      'profile',
+      'rbac',
+    ],
+  },
+] as const
+
 export function LandingPage() {
   const [heroMode, setHeroMode] = useState<ConstellationMode>('orbit')
   const [regionScope, setRegionScope] = useState<RegionScope>('global')
@@ -360,6 +520,28 @@ export function LandingPage() {
   const [jobLevelFilter, setJobLevelFilter] = useState<ExperienceLevel>('ALL')
   const [jobWorkplaceFilter, setJobWorkplaceFilter] =
     useState<WorkplaceMode>('ALL')
+  const [faqSearchQuery, setFaqSearchQuery] = useState('')
+  const [openFaqId, setOpenFaqId] = useState<string | null>(
+    INSTITUTIONAL_FAQS[0]?.id ?? null,
+  )
+
+  const normalizedFaqQuery = faqSearchQuery.trim().toLowerCase()
+
+  const filteredFaqs = INSTITUTIONAL_FAQS.filter((faq) => {
+    if (!normalizedFaqQuery) return true
+    return (
+      faq.category.toLowerCase().includes(normalizedFaqQuery) ||
+      faq.question.toLowerCase().includes(normalizedFaqQuery) ||
+      faq.answer.toLowerCase().includes(normalizedFaqQuery) ||
+      faq.keywords.some((kw) => kw.toLowerCase().includes(normalizedFaqQuery))
+    )
+  })
+
+  const handleFaqQuickFilter = (topic: string) => {
+    setFaqSearchQuery((prev) =>
+      prev.trim().toLowerCase() === topic.toLowerCase() ? '' : topic,
+    )
+  }
 
   const filteredLandingJobs = SUKKUR_IBA_JOB_LISTINGS.filter((job) => {
     const matchesSector =
@@ -1907,6 +2089,209 @@ export function LandingPage() {
 
               {/* Framer Motion Sliding Testimonial Carousel */}
               <TestimonialCarousel />
+            </div>
+          </section>
+
+          {/* 5B. INSTITUTIONAL FAQ SECTION WITH SEARCH & QUICK-FILTER BUTTONS */}
+          <section
+            id="faq"
+            className="py-20 lg:py-28 bg-background border-b border-border/70"
+          >
+            <div className="page-container">
+              <div className="max-w-3xl mx-auto">
+                {/* Editorial Section Header */}
+                <div className="text-center mb-10">
+                  <p className="text-xs font-mono uppercase tracking-wider text-primary mb-3">
+                    Institutional Knowledge Base · Frequently Asked Questions
+                  </p>
+                  <h2 className="font-display text-3xl sm:text-4xl lg:text-[2.65rem] font-bold tracking-tight text-foreground text-balance mb-3">
+                    Everything you need to know about the network.
+                  </h2>
+                  <p className="text-sm sm:text-base text-secondary leading-relaxed max-w-2xl mx-auto">
+                    Search or select a quick-filter topic below to explore how
+                    Sukkur IBA University verifies credentials, pairs mentorship
+                    cohorts, and fast-tracks alumni employment referrals.
+                  </p>
+                </div>
+
+                {/* Search Input + Quick-Filter Buttons Toolbar */}
+                <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-card mb-8 space-y-4">
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary" />
+                    <input
+                      type="search"
+                      value={faqSearchQuery}
+                      onChange={(e) => setFaqSearchQuery(e.target.value)}
+                      placeholder="Search FAQs by keyword (e.g., Verification, Mentorship, Employment, CMS ID)..."
+                      aria-label="Search frequently asked questions"
+                      className="w-full rounded-xl border border-border bg-background pl-11 pr-10 py-3 text-sm text-foreground placeholder:text-secondary/75 focus:outline-none focus:ring-2 focus:ring-primary/35 focus:border-primary transition-colors"
+                    />
+                    {faqSearchQuery.trim().length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setFaqSearchQuery('')}
+                        aria-label="Clear FAQ search filter"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-secondary hover:text-foreground hover:bg-stone/70 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Quick-Filter Buttons Row */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                    <div
+                      role="group"
+                      aria-label="Quick-filter FAQ topics"
+                      className="flex flex-wrap items-center gap-2"
+                    >
+                      <span className="text-xs font-mono uppercase tracking-wider text-secondary mr-1">
+                        Quick Filters:
+                      </span>
+                      <button
+                        type="button"
+                        aria-pressed={normalizedFaqQuery === ''}
+                        onClick={() => setFaqSearchQuery('')}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-colors cursor-pointer ${
+                          normalizedFaqQuery === ''
+                            ? 'bg-primary text-white shadow-xs'
+                            : 'border border-border bg-background text-secondary hover:text-foreground hover:border-primary/40'
+                        }`}
+                      >
+                        All ({INSTITUTIONAL_FAQS.length})
+                      </button>
+                      {FAQ_QUICK_FILTERS.map((topic) => {
+                        const isActive =
+                          normalizedFaqQuery === topic.toLowerCase()
+                        return (
+                          <button
+                            key={topic}
+                            type="button"
+                            aria-pressed={isActive}
+                            onClick={() => handleFaqQuickFilter(topic)}
+                            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-colors cursor-pointer ${
+                              isActive
+                                ? 'bg-primary text-white shadow-xs'
+                                : 'border border-border bg-background text-secondary hover:text-foreground hover:border-primary/40'
+                            }`}
+                          >
+                            {topic}
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    <span className="text-xs font-mono text-secondary tabular-nums">
+                      Showing {filteredFaqs.length} of{' '}
+                      {INSTITUTIONAL_FAQS.length} answers
+                    </span>
+                  </div>
+                </div>
+
+                {/* Staggered Framer Motion FAQ Accordion List */}
+                <AnimatePresence mode="wait">
+                  {filteredFaqs.length > 0 ? (
+                    <motion.div
+                      key={normalizedFaqQuery || 'all-faqs'}
+                      variants={stagger}
+                      initial="hidden"
+                      animate="visible"
+                      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                      className="space-y-3.5"
+                    >
+                      {filteredFaqs.map((faq) => {
+                        const isExpanded = openFaqId === faq.id
+                        return (
+                          <motion.div
+                            key={faq.id}
+                            variants={item}
+                            layout
+                            className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:border-primary/40 transition-colors"
+                          >
+                            <button
+                              type="button"
+                              aria-expanded={isExpanded}
+                              onClick={() =>
+                                setOpenFaqId((prev) =>
+                                  prev === faq.id ? null : faq.id,
+                                )
+                              }
+                              className="w-full px-6 py-5 text-left flex items-start justify-between gap-4 cursor-pointer"
+                            >
+                              <div className="space-y-1.5 pr-2">
+                                <div className="flex items-center gap-2 text-xs font-mono">
+                                  <span className="text-primary dark:text-[#2DD4BF] font-semibold">
+                                    {faq.category}
+                                  </span>
+                                  <span
+                                    aria-hidden="true"
+                                    className="text-border"
+                                  >
+                                    ·
+                                  </span>
+                                  <span className="text-secondary">
+                                    Sukkur IBA Governance
+                                  </span>
+                                </div>
+                                <h3 className="font-display text-base sm:text-lg font-bold text-foreground leading-snug">
+                                  {faq.question}
+                                </h3>
+                              </div>
+                              <span
+                                className={`mt-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-secondary transition-transform duration-200 ${
+                                  isExpanded
+                                    ? 'rotate-180 text-primary border-primary/40'
+                                    : ''
+                                }`}
+                              >
+                                <ChevronDown className="h-4 w-4" />
+                              </span>
+                            </button>
+
+                            <AnimatePresence initial={false}>
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: 'auto', opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{
+                                    duration: 0.25,
+                                    ease: EASE,
+                                  }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="px-6 pb-5 pt-1 border-t border-border/60 text-sm sm:text-[15px] text-secondary leading-relaxed">
+                                    {faq.answer}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </motion.div>
+                        )
+                      })}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="empty-faqs"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="rounded-2xl border border-border bg-card p-10 text-center space-y-3"
+                    >
+                      <p className="text-sm font-medium text-secondary">
+                        No FAQ entries match &ldquo;{faqSearchQuery}&rdquo;.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setFaqSearchQuery('')}
+                        className="text-xs font-mono font-semibold text-primary underline cursor-pointer"
+                      >
+                        Reset FAQ search filter
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </section>
 

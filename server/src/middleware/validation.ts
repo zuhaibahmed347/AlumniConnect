@@ -19,7 +19,7 @@ export const validate = (schema: AnyZodObject) => {
           if (!errors[path]) errors[path] = []
           errors[path].push(issue.message)
         }
-        next(AppError.validation(errors))
+        return next(AppError.validation(errors))
       }
       next(error)
     }
@@ -39,7 +39,7 @@ export const validateBody = (schema: AnyZodObject) => {
           if (!errors[path]) errors[path] = []
           errors[path].push(issue.message)
         }
-        next(AppError.validation(errors))
+        return next(AppError.validation(errors))
       }
       next(error)
     }
@@ -59,7 +59,7 @@ export const validateQuery = (schema: AnyZodObject) => {
           if (!errors[path]) errors[path] = []
           errors[path].push(issue.message)
         }
-        next(AppError.validation(errors))
+        return next(AppError.validation(errors))
       }
       next(error)
     }
@@ -79,7 +79,7 @@ export const validateParams = (schema: AnyZodObject) => {
           if (!errors[path]) errors[path] = []
           errors[path].push(issue.message)
         }
-        next(AppError.validation(errors))
+        return next(AppError.validation(errors))
       }
       next(error)
     }

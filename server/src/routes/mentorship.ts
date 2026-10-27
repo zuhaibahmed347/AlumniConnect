@@ -4,10 +4,9 @@ import { validateParams, validateBody, validateQuery } from '../middleware/valid
 import { asyncHandler } from '../utils/asyncHandler'
 import { successResponse, paginatedResponse, createdResponse, errorResponse } from '../utils/response'
 import { AppError } from '../utils/errors'
-import { idParamSchema, createMentorshipProfileSchema, updateMentorshipProfileSchema, createMentorshipRequestSchema, respondToMentorshipRequestSchema, paginationSchema } from '@alumni-connect/shared'
+import { idParamSchema, createMentorshipProfileSchema, updateMentorshipProfileSchema, createMentorshipRequestSchema, respondToMentorshipRequestSchema, paginationSchema, MentorshipStatus, UserRole } from '@alumni-connect/shared'
 import { requirePermission, AuthenticatedRequest } from '../middleware/auth'
 import { logAction } from '../middleware/auditLog'
-import { MentorshipStatus, UserRole } from '@prisma/client'
 
 const router = Router()
 
